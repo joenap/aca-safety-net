@@ -83,6 +83,14 @@ fn check_rm_path(path: &str, config: &CompiledConfig, cwd: Option<&str>) -> Opti
         }
     }
 
+    // Block any path starting with .. (parent escape) - always dangerous
+    if path.starts_with("..") {
+        return Some(Decision::block(
+            "rm.parent_escape",
+            format!("rm -rf with parent traversal '{}' is blocked", path),
+        ));
+    }
+
     // Check if path is outside cwd (if cwd is known)
     if config.raw.rm.block_outside_cwd {
         if let Some(cwd) = cwd {
