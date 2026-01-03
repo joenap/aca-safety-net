@@ -1,6 +1,10 @@
 # ACA Safety Net
 
-> **Note:** This project is a hard fork of [claude-code-safety-net](https://github.com/kenryu42/claude-code-safety-net) by kenryu42. Full attribution goes to the original project. This is a Claude-driven rewrite in Rust with additional features including cloud CLI protection (Heroku, AWS, GCloud), enhanced shell parsing, and configurable rule systems.
+> **Note:** This project is a hard fork of [claude-code-safety-net](https://github.com/kenryu42/claude-code-safety-net) by kenryu42. Full attribution goes to the original project.
+>
+> **Inherited from original:** Two-level config system (user + project with merging), secrets protection, destructive command detection, shell-aware parsing, custom rules, fail-open design.
+>
+> **New in this fork:** Claude-driven rewrite in Rust (original is Python), TOML config format (original uses JSON), cloud CLI protection (Heroku, AWS, GCloud), audit logging.
 
 A Rust-based security hook for Claude Code that blocks access to sensitive files, dangerous commands, and environment variable exposure.
 
@@ -265,39 +269,6 @@ just test      # Run tests
 just release   # Build release
 just install   # Build and install
 just ci        # Full CI check (fmt, lint, test)
-```
-
-### Project Structure
-
-```
-src/
-├── main.rs           # Entry point
-├── lib.rs            # Library exports
-├── config.rs         # TOML config loading
-├── input.rs          # Hook input parsing
-├── decision.rs       # Allow/Block types
-├── audit.rs          # JSONL logging
-├── shell/            # Shell parsing
-│   ├── splitter.rs   # Command splitting
-│   ├── tokenizer.rs  # Token parsing
-│   └── wrappers.rs   # Wrapper stripping
-├── analysis/         # Tool analysis
-│   ├── bash.rs
-│   └── read.rs
-├── rules/            # Built-in rules
-│   ├── git.rs
-│   ├── rm.rs
-│   ├── find.rs
-│   ├── xargs.rs
-│   ├── parallel.rs
-│   ├── secrets.rs
-│   ├── heroku.rs     # Heroku CLI
-│   ├── aws.rs        # AWS CLI
-│   ├── gcloud.rs     # GCloud CLI
-│   └── custom.rs
-└── output/           # Response formatting
-    ├── response.rs
-    └── redaction.rs
 ```
 
 ## License
