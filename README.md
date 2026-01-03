@@ -1,5 +1,7 @@
 # ACA Safety Net
 
+> **Note:** This project is a hard fork of [claude-code-safety-net](https://github.com/kenryu42/claude-code-safety-net) by kenryu42. Full attribution goes to the original project. This is a Claude-driven rewrite in Rust with additional features including cloud CLI protection (Heroku, AWS, GCloud), enhanced shell parsing, and configurable rule systems.
+
 A Rust-based security hook for Claude Code that blocks access to sensitive files, dangerous commands, and environment variable exposure.
 
 ## Features
