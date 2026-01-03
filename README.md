@@ -1,4 +1,4 @@
-# ACO Safety Net
+# ACA Safety Net
 
 A Rust-based security hook for Claude Code that blocks access to sensitive files, dangerous commands, and environment variable exposure.
 
@@ -6,6 +6,7 @@ A Rust-based security hook for Claude Code that blocks access to sensitive files
 
 - **Fast**: <5ms execution (vs 50-100ms for Python alternatives)
 - **Secrets Protection**: Blocks read access to `.env`, credentials, SSH keys, API tokens
+- **Cloud CLI Protection**: Blocks secret-exposing commands from Heroku, AWS, and GCloud CLIs
 - **Destructive Command Detection**: Blocks `rm -rf` outside working directory, dangerous git operations
 - **Shell-Aware**: Parses command chains (`&&`, `||`, `|`, `;`), strips wrappers (`sudo`, `env`, `bash -c`)
 - **Configurable**: TOML config with user + project-level overrides
@@ -13,26 +14,15 @@ A Rust-based security hook for Claude Code that blocks access to sensitive files
 
 ## Quick Start
 
-### 1. Build
+### 1. Build and Install
 
 ```bash
-cargo build --release
-```
-
-### 2. Install Binary
-
-```bash
-cp target/release/aca-safety-net ~/.local/bin/
+just install
+# Installs binary to ~/.local/bin/ and config to ~/.claude/
 # Ensure ~/.local/bin is in your PATH
 ```
 
-### 3. Create Config
-
-```bash
-cp config.toml ~/.claude/security-hook.toml
-```
-
-### 4. Configure Claude Code
+### 2. Configure Claude Code
 
 Add to `~/.claude/settings.json`:
 
@@ -158,6 +148,28 @@ path = "~/.claude/security-hook.log"
 - `xargs rm`
 - `parallel rm`
 
+### Cloud CLI Secret Exposure
+
+#### Heroku
+- `heroku auth:token` (exposes auth token)
+- `heroku config` / `heroku config:get` (exposes env vars)
+- `heroku pg:credentials` / `heroku redis:credentials` (database credentials)
+
+#### AWS
+- `aws secretsmanager get-secret-value` (retrieves secrets)
+- `aws ssm get-parameter --with-decryption` (decrypts parameters)
+- `aws kms decrypt` (decrypts data)
+- `aws iam list-access-keys` / `aws iam create-access-key` (access key exposure)
+- `aws sts get-session-token` / `aws sts assume-role` (temporary credentials)
+- `aws configure export-credentials` (exports credentials)
+
+#### GCloud
+- `gcloud auth print-access-token` / `gcloud auth print-identity-token` (token exposure)
+- `gcloud auth application-default print-access-token` (ADC token)
+- `gcloud secrets versions access` (retrieves secret values)
+
+**Allowed**: Non-secret queries like `aws s3 ls`, `gcloud config list`, `heroku apps`
+
 ## Paranoid Mode
 
 Enable paranoid mode to block ANY command that mentions sensitive files, not just read commands:
@@ -246,16 +258,11 @@ This is static analysis only - it cannot execute commands to determine their act
 
 ## Development
 
-### Run Tests
-
 ```bash
-cargo test
-```
-
-### Build Release
-
-```bash
-cargo build --release
+just test      # Run tests
+just release   # Build release
+just install   # Build and install
+just ci        # Full CI check (fmt, lint, test)
 ```
 
 ### Project Structure
@@ -282,6 +289,9 @@ src/
 │   ├── xargs.rs
 │   ├── parallel.rs
 │   ├── secrets.rs
+│   ├── heroku.rs     # Heroku CLI
+│   ├── aws.rs        # AWS CLI
+│   ├── gcloud.rs     # GCloud CLI
 │   └── custom.rs
 └── output/           # Response formatting
     ├── response.rs

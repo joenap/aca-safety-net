@@ -1,4 +1,4 @@
-# ACO Safety Net: Rust Security Hook Implementation Plan
+# ACA Safety Net: Rust Security Hook Implementation Plan
 
 ## Overview
 
