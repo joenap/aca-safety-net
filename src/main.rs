@@ -1,11 +1,11 @@
 //! ACO Safety Net - Claude Code security hook entry point.
 
-use aco_safety_net::analysis::{analyze_bash, analyze_read};
-use aco_safety_net::audit::AuditLogger;
-use aco_safety_net::config::Config;
-use aco_safety_net::decision::Decision;
-use aco_safety_net::input::HookInput;
-use aco_safety_net::output::format_response;
+use aca_safety_net::analysis::{analyze_bash, analyze_read};
+use aca_safety_net::audit::AuditLogger;
+use aca_safety_net::config::Config;
+use aca_safety_net::decision::Decision;
+use aca_safety_net::input::HookInput;
+use aca_safety_net::output::format_response;
 
 use std::io::{self, Read};
 use std::path::Path;

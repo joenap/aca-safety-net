@@ -1,4 +1,4 @@
-# Claude Code Instructions for aco-safety-net
+# Claude Code Instructions for aca-safety-net
 
 ## CRITICAL: Testing the Security Hook
 

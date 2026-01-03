@@ -43,7 +43,7 @@ reason = "Exposes exported variables"
 "#;
 
 fn cmd_with_config(config_file: &NamedTempFile) -> Command {
-    let mut cmd = Command::cargo_bin("aco-safety-net").unwrap();
+    let mut cmd = Command::cargo_bin("aca-safety-net").unwrap();
     cmd.env("ACO_SAFETY_NET_CONFIG", config_file.path());
     cmd
 }

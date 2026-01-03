@@ -22,7 +22,7 @@ cargo build --release
 ### 2. Install Binary
 
 ```bash
-cp target/release/aco-safety-net ~/.local/bin/
+cp target/release/aca-safety-net ~/.local/bin/
 # Ensure ~/.local/bin is in your PATH
 ```
 
@@ -45,7 +45,7 @@ Add to `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "aco-safety-net",
+            "command": "aca-safety-net",
             "timeout": 1
           }
         ]

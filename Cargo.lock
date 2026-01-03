@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "aco-safety-net"
+name = "aca-safety-net"
 version = "0.1.0"
 dependencies = [
  "assert_cmd",

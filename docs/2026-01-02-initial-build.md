@@ -125,7 +125,7 @@ cargo add --dev tempfile assert_cmd predicates
 ## Installation (Manual)
 
 1. Build: `cargo build --release`
-2. Install: `cp target/release/aco-safety-net ~/.local/bin/`
+2. Install: `cp target/release/aca-safety-net ~/.local/bin/`
 3. Config: `cp config.toml ~/.claude/security-hook.toml`
 4. Edit `~/.claude/settings.json`:
 
@@ -136,7 +136,7 @@ cargo add --dev tempfile assert_cmd predicates
       "matcher": "Bash|Read",
       "hooks": [{
         "type": "command",
-        "command": "aco-safety-net",
+        "command": "aca-safety-net",
         "timeout": 1
       }]
     }]
