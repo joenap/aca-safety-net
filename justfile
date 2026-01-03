@@ -51,7 +51,7 @@ doc:
 ci: fmt-check lint test
 
 # Install binary and config to user directories
-install: release
+install: release test
 	mkdir -p ~/.local/bin
 	cp target/release/aca-safety-net ~/.local/bin/
 	mkdir -p ~/.claude
