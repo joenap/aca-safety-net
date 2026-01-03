@@ -32,24 +32,33 @@ pub fn analyze_bash(input: &BashInput, config: &CompiledConfig, cwd: Option<&str
     }
 
     // 4. Check read commands + sensitive files
-    if config.is_read_command(command) {
-        // Check all segments for sensitive file access
-        let segments = split_commands(command);
-        for segment in &segments {
-            let stripped = strip_wrappers(&segment.command);
-            let tokens = tokenize(&stripped);
+    // Only check when the actual command (first word) is a read command
+    let segments = split_commands(command);
+    for segment in &segments {
+        let stripped = strip_wrappers(&segment.command);
+        let tokens = tokenize(&stripped);
 
-            // Check all words that look like paths
-            for token in &tokens {
-                if let Token::Word(word) = token {
-                    // Skip if it looks like an option
-                    if word.starts_with('-') {
-                        continue;
-                    }
-                    // Check if it matches sensitive pattern
-                    let decision = check_sensitive_path(word, config);
-                    if decision.is_blocked() {
-                        return decision;
+        // Get the command name (first word)
+        let cmd_name = tokens.iter().find_map(|t| match t {
+            Token::Word(w) if !w.starts_with('-') => Some(w.as_str()),
+            _ => None,
+        });
+
+        // Only check sensitive files if this segment starts with a read command
+        if let Some(cmd) = cmd_name {
+            if config.is_read_command(cmd) {
+                // Check all words that look like paths
+                for token in &tokens {
+                    if let Token::Word(word) = token {
+                        // Skip if it looks like an option
+                        if word.starts_with('-') {
+                            continue;
+                        }
+                        // Check if it matches sensitive pattern
+                        let decision = check_sensitive_path(word, config);
+                        if decision.is_blocked() {
+                            return decision;
+                        }
                     }
                 }
             }

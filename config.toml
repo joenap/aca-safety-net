@@ -2,51 +2,52 @@
 # Copy to ~/.claude/security-hook.toml
 
 # Sensitive file patterns (applied to Bash commands and Read file_path)
+# Note: TOML single-quoted strings are literal - use single backslash for regex
 sensitive_files = [
-    '\\.env\\b',
-    '\\.envrc\\b',
+    '\.env\b',
+    '\.envrc\b',
     'credentials',
     'secrets',
-    '\\.netrc\\b',
-    '\\.npmrc\\b',
-    '\\.pypirc\\b',
-    '\\.pem\\b',
-    '\\.key\\b',
+    '\.netrc\b',
+    '\.npmrc\b',
+    '\.pypirc\b',
+    '\.pem\b',
+    '\.key\b',
     'id_rsa',
     'id_ed25519',
     'id_ecdsa',
-    '\\.git-credentials',
+    '\.git-credentials',
     'kubeconfig',
-    '\\.aws/credentials',
-    '\\.config/gcloud/',
-    '\\.config/gh/hosts\\.yml',
-    '_history\\b',
-    '\\.bash_history',
-    '\\.zsh_history',
+    '\.aws/credentials',
+    '\.config/gcloud/',
+    '\.config/gh/hosts\.yml',
+    '_history\b',
+    '\.bash_history',
+    '\.zsh_history',
 ]
 
 # Commands that read file content (only block these + sensitive_files combo)
-read_commands = '\\b(cat|head|tail|less|more|grep|rg|ag|sed|awk|strings|xxd|hexdump|bat|view)\\b'
+read_commands = '\b(cat|head|tail|less|more|grep|rg|ag|sed|awk|strings|xxd|hexdump|bat|view)\b'
 
 # Always block these patterns (env exposure)
 [[deny]]
 tool = "Bash"
-pattern = '^\\s*printenv'
+pattern = '^\s*printenv'
 reason = "Exposes environment variables"
 
 [[deny]]
 tool = "Bash"
-pattern = '^\\s*set\\s*$'
+pattern = '^\s*set\s*$'
 reason = "Exposes shell variables"
 
 [[deny]]
 tool = "Bash"
-pattern = '^\\s*declare\\s+-x'
+pattern = '^\s*declare\s+-x'
 reason = "Exposes exported variables"
 
 [[deny]]
 tool = "Bash"
-pattern = '^\\s*export\\s*$'
+pattern = '^\s*export\s*$'
 reason = "Exposes exported variables"
 
 [[deny]]
@@ -56,20 +57,20 @@ reason = "Exposes process environment"
 
 [[deny]]
 tool = "Bash"
-pattern = '\\bps\\b.*(-E|auxe)'
+pattern = '\bps\b.*(-E|auxe)'
 reason = "Exposes process environment"
 
 [[deny]]
 tool = "Bash"
-pattern = '\\b(docker|podman)\\s+(exec|run)\\b.*\\benv\\b'
+pattern = '\b(docker|podman)\s+(exec|run)\b.*\benv\b'
 reason = "Exposes container environment"
 
 [[deny]]
 tool = "Bash"
-pattern = '\\b(docker|podman)\\s+inspect\\b'
+pattern = '\b(docker|podman)\s+inspect\b'
 reason = "Exposes container configuration"
 
 [[deny]]
 tool = "Bash"
-pattern = '\\b(docker-compose|docker\\s+compose)\\s+exec\\b.*\\benv\\b'
+pattern = '\b(docker-compose|docker\s+compose)\s+exec\b.*\benv\b'
 reason = "Exposes container environment"
