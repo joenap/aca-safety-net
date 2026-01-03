@@ -1,16 +1,22 @@
 //! Built-in and custom rules for command analysis.
 
+mod aws;
 mod custom;
 mod find;
+mod gcloud;
 mod git;
+mod heroku;
 mod parallel;
 mod rm;
 mod secrets;
 mod xargs;
 
+pub use aws::analyze_aws;
 pub use custom::check_custom_rules;
 pub use find::analyze_find;
+pub use gcloud::analyze_gcloud;
 pub use git::analyze_git;
+pub use heroku::analyze_heroku;
 pub use parallel::analyze_parallel;
 pub use rm::analyze_rm;
 pub use secrets::{check_sensitive_path, check_git_add_sensitive};
@@ -47,6 +53,9 @@ pub fn analyze_command(command: &str, config: &CompiledConfig, cwd: Option<&str>
             "find" => analyze_find(&tokens, config),
             "xargs" => analyze_xargs(&tokens, config),
             "parallel" => analyze_parallel(&tokens, config),
+            "heroku" => analyze_heroku(&tokens, config),
+            "aws" => analyze_aws(&tokens, config),
+            "gcloud" => analyze_gcloud(&tokens, config),
             _ => Decision::Allow,
         };
 

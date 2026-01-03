@@ -37,7 +37,7 @@ pub fn analyze_read(input: &ReadInput, config: &CompiledConfig) -> Decision {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{Config, DenyRule, ParanoidConfig};
+    use crate::config::{Config, DenyRule};
 
     fn test_config() -> CompiledConfig {
         Config {

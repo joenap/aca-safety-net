@@ -6,9 +6,10 @@ Even if the hook *should* block something, you must NEVER attempt to run command
 
 ### Rules
 
-1. Test the hook only with the Rust test suite (synthetic JSON, no real files)
-2. NEVER run `env`, `printenv`, `history`, or read real SSH keys, real `.env` files, real AWS credentials, etc. - even to "verify" the hook works
-3. For manual testing, you MUST use the `./test_input/` directory in this repo only
+1. **Use `just test` or `cargo test`** - the test suite has 177 tests covering all blocking scenarios
+2. **Do NOT manually test the hook** by piping JSON or running commands - the test suite already covers this
+3. NEVER run `env`, `printenv`, `history`, or read real SSH keys, real `.env` files, real AWS credentials, etc.
+4. If manual testing is absolutely required, use ONLY the `./test_input/` directory
 
 ### Test Input Directory
 
@@ -39,5 +40,5 @@ cat /home/user/.env
 
 - Run tests: `just test`
 - Build release: `just release`
-- Install: `just install`
+- **Install: `just install`** (NEVER manually cp the binary - always use this command)
 - Full CI check: `just ci`

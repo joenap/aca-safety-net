@@ -46,6 +46,7 @@ pub fn redact_secrets(text: &str) -> String {
 }
 
 /// Check if text contains potential secrets.
+#[allow(dead_code)]
 pub fn contains_secrets(text: &str) -> bool {
     for (pattern, _) in SECRET_PATTERNS {
         if let Ok(re) = Regex::new(pattern) {

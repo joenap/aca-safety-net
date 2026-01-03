@@ -119,6 +119,7 @@ fn is_valid_var_name(s: &str) -> bool {
 }
 
 /// Get the command name (first word) from tokens.
+#[allow(dead_code)]
 pub fn command_name(tokens: &[Token]) -> Option<&str> {
     for token in tokens {
         match token {
@@ -131,6 +132,7 @@ pub fn command_name(tokens: &[Token]) -> Option<&str> {
 }
 
 /// Get all arguments after the command name.
+#[allow(dead_code)]
 pub fn arguments(tokens: &[Token]) -> Vec<&str> {
     let mut args = Vec::new();
     let mut found_command = false;
