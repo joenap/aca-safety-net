@@ -55,27 +55,9 @@ install: release
 	mkdir -p ~/.local/bin
 	cp target/release/aco-safety-net ~/.local/bin/
 	mkdir -p ~/.claude
-	@if [ ! -f ~/.claude/security-hook.toml ]; then \
-		cp config.toml ~/.claude/security-hook.toml; \
-		echo "Installed config to ~/.claude/security-hook.toml"; \
-	else \
-		echo "Config already exists at ~/.claude/security-hook.toml (not overwritten)"; \
-	fi
-	@echo "Installed binary to ~/.local/bin/aco-safety-net"
-	@echo ""
-	@echo "Add to ~/.claude/settings.json:"
-	@echo '{'
-	@echo '  "hooks": {'
-	@echo '    "PreToolUse": [{'
-	@echo '      "matcher": "Bash|Read",'
-	@echo '      "hooks": [{'
-	@echo '        "type": "command",'
-	@echo '        "command": "aco-safety-net",'
-	@echo '        "timeout": 1'
-	@echo '      }]'
-	@echo '    }]'
-	@echo '  }'
-	@echo '}'
+	cp config.toml ~/.claude/security-hook.toml
+	@echo "Installed ~/.local/bin/aco-safety-net"
+	@echo "Installed ~/.claude/security-hook.toml"
 
 # Uninstall binary and config
 uninstall:
