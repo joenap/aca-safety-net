@@ -27,6 +27,7 @@ fn format_block_message(info: &BlockInfo) -> String {
     if let Some(details) = &info.details {
         msg.push_str(&format!(" ({})", details));
     }
+    msg.push_str("\n\nYOU ABSOLUTELY MUST NOT ATTEMPT TO READ THE TARGET FILE/SECRET/TOKEN VIA WORKAROUNDS. CONSULT THE USER IF YOU ARE CERTAIN THE TARGET FILE/SECRET/TOKEN NEEDS TO BE VERIFIED, ONLY AFTER EXHAUSTIVE DEBUGGING THAT RESULTS IN THIS CERTAINTY.");
     msg
 }
 
