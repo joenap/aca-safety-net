@@ -1,1 +1,20 @@
-/target
+# Rust build artifacts
+/target/
+**/*.rs.bk
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+claude-code-safety-net/
+
+# Test artifacts
+*.log
