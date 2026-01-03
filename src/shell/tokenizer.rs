@@ -69,15 +69,23 @@ pub fn tokenize(input: &str) -> Vec<Token> {
             }
             let mut redir = String::from(c);
             if c == '>' && chars.peek() == Some(&'>') {
-                redir.push(chars.next().unwrap());
+                if let Some(ch) = chars.next() {
+                    redir.push(ch);
+                }
             }
             if c == '>' && chars.peek() == Some(&'&') {
-                redir.push(chars.next().unwrap());
+                if let Some(ch) = chars.next() {
+                    redir.push(ch);
+                }
             }
             if c == '<' && chars.peek() == Some(&'<') {
-                redir.push(chars.next().unwrap());
+                if let Some(ch) = chars.next() {
+                    redir.push(ch);
+                }
                 if chars.peek() == Some(&'<') {
-                    redir.push(chars.next().unwrap());
+                    if let Some(ch) = chars.next() {
+                        redir.push(ch);
+                    }
                 }
             }
             tokens.push(Token::Redirect(redir));
