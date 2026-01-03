@@ -1,4 +1,4 @@
-# ACA Safety Net
+# Autonomous Coding Agent (ACA) Safety Net
 
 > **Note:** This project is a hard fork of [claude-code-safety-net](https://github.com/kenryu42/claude-code-safety-net) by kenryu42. Full attribution goes to the original project.
 >
