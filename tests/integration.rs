@@ -1,6 +1,6 @@
 //! Integration tests for aca-safety-net binary.
 
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use predicates::prelude::*;
 use std::fs;
 use tempfile::TempDir;
@@ -13,15 +13,15 @@ fn create_config(dir: &TempDir, content: &str) -> std::path::PathBuf {
 }
 
 /// Get a command with config path set via env var.
-fn cmd_with_config(config_path: &std::path::Path) -> Command {
-    let mut cmd = Command::cargo_bin("aca-safety-net").unwrap();
+fn cmd_with_config(config_path: &std::path::Path) -> assert_cmd::Command {
+    let mut cmd = cargo_bin_cmd!("aca-safety-net");
     cmd.env("ACO_SAFETY_NET_CONFIG", config_path);
     cmd
 }
 
 /// Get a command with temp dir but no config (for fail-open tests).
-fn cmd_without_config(home: &TempDir) -> Command {
-    let mut cmd = Command::cargo_bin("aca-safety-net").unwrap();
+fn cmd_without_config(home: &TempDir) -> assert_cmd::Command {
+    let mut cmd = cargo_bin_cmd!("aca-safety-net");
     // Point to non-existent config
     cmd.env("ACO_SAFETY_NET_CONFIG", home.path().join("nonexistent.toml"));
     cmd

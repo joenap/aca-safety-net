@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::cargo::cargo_bin_cmd;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
@@ -42,8 +42,8 @@ pattern = '^\s*declare\s+-x'
 reason = "Exposes exported variables"
 "#;
 
-fn cmd_with_config(config_file: &NamedTempFile) -> Command {
-    let mut cmd = Command::cargo_bin("aca-safety-net").unwrap();
+fn cmd_with_config(config_file: &NamedTempFile) -> assert_cmd::Command {
+    let mut cmd = cargo_bin_cmd!("aca-safety-net");
     cmd.env("ACO_SAFETY_NET_CONFIG", config_file.path());
     cmd
 }
