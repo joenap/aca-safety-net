@@ -55,6 +55,10 @@ pub struct Config {
     /// Audit logging settings.
     #[serde(default)]
     pub audit: AuditConfig,
+
+    /// Dependency file protection settings.
+    #[serde(default)]
+    pub dependencies: DependencyConfig,
 }
 
 /// Explicit deny rule.
@@ -150,6 +154,42 @@ pub struct AuditConfig {
     pub path: Option<String>,
 }
 
+/// Dependency file protection configuration.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(default)]
+pub struct DependencyConfig {
+    /// Enable dependency file protection (requires user approval for edits).
+    pub enabled: bool,
+    /// Regex patterns matching dependency files.
+    pub patterns: Vec<String>,
+    /// Suggestion message shown to user.
+    pub suggestion: Option<String>,
+}
+
+impl Default for DependencyConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            patterns: vec![
+                r"(^|/)Cargo\.toml$".to_string(),
+                r"(^|/)pyproject\.toml$".to_string(),
+                r"(^|/)package\.json$".to_string(),
+                r"(^|/)requirements\.txt$".to_string(),
+                r"(^|/)Gemfile$".to_string(),
+                r"(^|/)go\.mod$".to_string(),
+                r"(^|/)pom\.xml$".to_string(),
+                r"(^|/)build\.gradle(\.kts)?$".to_string(),
+                r"(^|/)composer\.json$".to_string(),
+                r"(^|/)Package\.swift$".to_string(),
+            ],
+            suggestion: Some(
+                "Use package manager CLI (cargo add, uv add, npm install, etc.) instead of editing directly"
+                    .to_string(),
+            ),
+        }
+    }
+}
+
 /// Compiled configuration with pre-built regexes.
 pub struct CompiledConfig {
     /// The raw config.
@@ -162,6 +202,8 @@ pub struct CompiledConfig {
     pub deny_patterns: Vec<(DenyRule, Regex)>,
     /// Compiled paranoid patterns.
     pub paranoid_patterns: Vec<Regex>,
+    /// Compiled dependency file patterns.
+    pub dependency_patterns: Vec<Regex>,
 }
 
 impl Config {
@@ -287,12 +329,28 @@ impl Config {
             })?);
         }
 
+        let dependency_patterns = if self.dependencies.enabled {
+            self.dependencies
+                .patterns
+                .iter()
+                .map(|p| {
+                    Regex::new(p).map_err(|e| ConfigError::Regex {
+                        pattern: p.clone(),
+                        source: e,
+                    })
+                })
+                .collect::<Result<Vec<_>, _>>()?
+        } else {
+            vec![]
+        };
+
         Ok(CompiledConfig {
             raw: self,
             sensitive_patterns,
             read_commands_re,
             deny_patterns,
             paranoid_patterns,
+            dependency_patterns,
         })
     }
 }
@@ -332,6 +390,19 @@ impl CompiledConfig {
             }
         }
         None
+    }
+
+    /// Check if a path matches any dependency file pattern.
+    pub fn is_dependency_file(&self, path: &str) -> bool {
+        if !self.raw.dependencies.enabled {
+            return false;
+        }
+        self.dependency_patterns.iter().any(|re| re.is_match(path))
+    }
+
+    /// Get the suggestion message for dependency files.
+    pub fn dependency_suggestion(&self) -> Option<&str> {
+        self.raw.dependencies.suggestion.as_deref()
     }
 }
 

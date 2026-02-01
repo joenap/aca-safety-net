@@ -74,3 +74,22 @@ reason = "Exposes container configuration"
 tool = "Bash"
 pattern = '\b(docker-compose|docker\s+compose)\s+exec\b.*\benv\b'
 reason = "Exposes container environment"
+
+# Dependency file protection
+# Requires user approval before editing package manifests
+# Encourages using CLI tools (cargo add, uv add, npm install, etc.)
+[dependencies]
+enabled = true
+patterns = [
+    '(^|/)Cargo\.toml$',
+    '(^|/)pyproject\.toml$',
+    '(^|/)package\.json$',
+    '(^|/)requirements\.txt$',
+    '(^|/)Gemfile$',
+    '(^|/)go\.mod$',
+    '(^|/)pom\.xml$',
+    '(^|/)build\.gradle(\.kts)?$',
+    '(^|/)composer\.json$',
+    '(^|/)Package\.swift$',
+]
+suggestion = "Use package manager CLI (cargo add, uv add, npm install, etc.) instead of editing directly"

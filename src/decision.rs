@@ -9,6 +9,8 @@ pub enum Decision {
     Allow,
     /// Block the tool with a reason.
     Block(BlockInfo),
+    /// Ask the user for approval.
+    Ask(AskInfo),
 }
 
 /// Information about why a tool was blocked.
@@ -21,6 +23,18 @@ pub struct BlockInfo {
     /// Optional details (e.g., matched pattern).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<String>,
+}
+
+/// Information about why user approval is required.
+#[derive(Debug, Clone, Serialize)]
+pub struct AskInfo {
+    /// Human-readable reason for asking.
+    pub reason: String,
+    /// The rule that triggered the ask.
+    pub rule: String,
+    /// Suggestion for alternative approach.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suggestion: Option<String>,
 }
 
 impl BlockInfo {
@@ -38,6 +52,21 @@ impl BlockInfo {
     }
 }
 
+impl AskInfo {
+    pub fn new(rule: impl Into<String>, reason: impl Into<String>) -> Self {
+        Self {
+            rule: rule.into(),
+            reason: reason.into(),
+            suggestion: None,
+        }
+    }
+
+    pub fn with_suggestion(mut self, suggestion: impl Into<String>) -> Self {
+        self.suggestion = Some(suggestion.into());
+        self
+    }
+}
+
 impl Decision {
     /// Create an allow decision.
     pub fn allow() -> Self {
@@ -49,16 +78,34 @@ impl Decision {
         Decision::Block(BlockInfo::new(rule, reason))
     }
 
+    /// Create an ask decision (requires user approval).
+    pub fn ask(rule: impl Into<String>, reason: impl Into<String>) -> Self {
+        Decision::Ask(AskInfo::new(rule, reason))
+    }
+
     /// Check if this is a block decision.
     pub fn is_blocked(&self) -> bool {
         matches!(self, Decision::Block(_))
+    }
+
+    /// Check if this requires user approval.
+    pub fn is_ask(&self) -> bool {
+        matches!(self, Decision::Ask(_))
     }
 
     /// Get the block info if blocked.
     pub fn block_info(&self) -> Option<&BlockInfo> {
         match self {
             Decision::Block(info) => Some(info),
-            Decision::Allow => None,
+            _ => None,
+        }
+    }
+
+    /// Get the ask info if asking.
+    pub fn ask_info(&self) -> Option<&AskInfo> {
+        match self {
+            Decision::Ask(info) => Some(info),
+            _ => None,
         }
     }
 }

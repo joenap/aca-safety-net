@@ -1,13 +1,13 @@
 //! ACO Safety Net - Claude Code security hook entry point.
 
-use aca_safety_net::analysis::{analyze_bash, analyze_read};
+use aca_safety_net::analysis::{analyze_bash, analyze_edit, analyze_read, analyze_write};
 use aca_safety_net::audit::AuditLogger;
 use aca_safety_net::config::Config;
 use aca_safety_net::decision::Decision;
 use aca_safety_net::input::HookInput;
 use aca_safety_net::output::format_response;
 
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::path::Path;
 use std::process::ExitCode;
 
@@ -56,7 +56,21 @@ fn main() -> ExitCode {
                 Decision::allow()
             }
         }
-        // Other tools pass through (for now)
+        "Edit" => {
+            if let Some(edit_input) = hook_input.as_edit() {
+                analyze_edit(&edit_input, &compiled)
+            } else {
+                Decision::allow()
+            }
+        }
+        "Write" => {
+            if let Some(write_input) = hook_input.as_write() {
+                analyze_write(&write_input, &compiled)
+            } else {
+                Decision::allow()
+            }
+        }
+        // Other tools pass through
         _ => Decision::allow(),
     };
 
@@ -77,6 +91,14 @@ fn main() -> ExitCode {
                 eprintln!("{}", msg);
             }
             ExitCode::from(2)
+        }
+        Decision::Ask(_) => {
+            // Ask decisions output JSON to stdout for Claude Code to parse
+            if let Some(json) = format_response(&decision) {
+                let _ = io::stdout().write_all(json.as_bytes());
+                let _ = io::stdout().write_all(b"\n");
+            }
+            ExitCode::SUCCESS
         }
     }
 }

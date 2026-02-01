@@ -12,7 +12,7 @@ pub mod output;
 pub mod rules;
 pub mod shell;
 
-pub use analysis::{analyze_bash, analyze_read};
+pub use analysis::{analyze_bash, analyze_edit, analyze_read, analyze_write};
 pub use config::{CompiledConfig, Config};
 pub use decision::Decision;
 pub use input::HookInput;

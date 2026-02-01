@@ -387,3 +387,83 @@ fn test_read_normal_file_allowed() {
         .assert()
         .success();
 }
+
+#[test]
+fn test_edit_cargo_toml_asks() {
+    let dir = TempDir::new().unwrap();
+    let config = create_config(&dir, r#"sensitive_files = []"#);
+
+    let input = r#"{"tool_name":"Edit","tool_input":{"file_path":"Cargo.toml","old_string":"old","new_string":"new"}}"#;
+
+    cmd_with_config(&config)
+        .write_stdin(input)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"decision\":\"ask\""))
+        .stdout(predicate::str::contains("cargo add"));
+}
+
+#[test]
+fn test_write_package_json_asks() {
+    let dir = TempDir::new().unwrap();
+    let config = create_config(&dir, r#"sensitive_files = []"#);
+
+    let input = r#"{"tool_name":"Write","tool_input":{"file_path":"package.json","content":"{}"}}"#;
+
+    cmd_with_config(&config)
+        .write_stdin(input)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"decision\":\"ask\""));
+}
+
+#[test]
+fn test_edit_normal_file_allowed() {
+    let dir = TempDir::new().unwrap();
+    let config = create_config(&dir, r#"sensitive_files = []"#);
+
+    let input = r#"{"tool_name":"Edit","tool_input":{"file_path":"src/main.rs","old_string":"old","new_string":"new"}}"#;
+
+    cmd_with_config(&config)
+        .write_stdin(input)
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty());
+}
+
+#[test]
+fn test_edit_deps_disabled_allows() {
+    let dir = TempDir::new().unwrap();
+    let config = create_config(
+        &dir,
+        r#"
+sensitive_files = []
+
+[dependencies]
+enabled = false
+"#,
+    );
+
+    let input = r#"{"tool_name":"Edit","tool_input":{"file_path":"Cargo.toml","old_string":"old","new_string":"new"}}"#;
+
+    cmd_with_config(&config)
+        .write_stdin(input)
+        .assert()
+        .success()
+        .stdout(predicate::str::is_empty());
+}
+
+#[test]
+fn test_edit_pyproject_toml_asks() {
+    let dir = TempDir::new().unwrap();
+    let config = create_config(&dir, r#"sensitive_files = []"#);
+
+    let input = r#"{"tool_name":"Edit","tool_input":{"file_path":"/home/user/project/pyproject.toml","old_string":"old","new_string":"new"}}"#;
+
+    cmd_with_config(&config)
+        .write_stdin(input)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"decision\":\"ask\""))
+        .stdout(predicate::str::contains("uv add"));
+}

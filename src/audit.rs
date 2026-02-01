@@ -21,10 +21,13 @@ pub struct AuditEntry {
     pub tool: String,
     /// Whether the operation was blocked.
     pub blocked: bool,
-    /// Rule that triggered the block (if blocked).
+    /// Whether user approval was requested.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub asked: bool,
+    /// Rule that triggered the block/ask (if blocked or asked).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rule: Option<String>,
-    /// Reason for blocking (if blocked).
+    /// Reason for blocking/asking (if blocked or asked).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
     /// Summary of the operation (command or path).
@@ -34,9 +37,14 @@ pub struct AuditEntry {
 impl AuditEntry {
     /// Create a new audit entry from hook input and decision.
     pub fn new(input: &HookInput, decision: &Decision) -> Self {
-        let (blocked, rule, reason) = match decision {
-            Decision::Allow => (false, None, None),
-            Decision::Block(info) => (true, Some(info.rule.clone()), Some(info.reason.clone())),
+        let (blocked, asked, rule, reason) = match decision {
+            Decision::Allow => (false, false, None, None),
+            Decision::Block(info) => {
+                (true, false, Some(info.rule.clone()), Some(info.reason.clone()))
+            }
+            Decision::Ask(info) => {
+                (false, true, Some(info.rule.clone()), Some(info.reason.clone()))
+            }
         };
 
         let summary = input
@@ -50,6 +58,7 @@ impl AuditEntry {
             session_id: input.session_id.clone(),
             tool: input.tool_name.clone(),
             blocked,
+            asked,
             rule,
             reason,
             summary,
