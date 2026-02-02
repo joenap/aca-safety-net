@@ -260,6 +260,63 @@ fn test_no_config_allows_safe_commands() {
 }
 
 #[test]
+fn test_user_config_extends_defaults() {
+    // User config should extend defaults, not replace them
+    let dir = TempDir::new().unwrap();
+    // Add a custom pattern but don't include .env - defaults should still block .env
+    let config = create_config(
+        &dir,
+        r#"
+sensitive_files = ['my-custom-secret']
+"#,
+    );
+
+    // Default pattern (.env) should still be blocked
+    let input = r#"{"tool_name":"Bash","tool_input":{"command":"cat .env"}}"#;
+    cmd_with_config(&config)
+        .write_stdin(input)
+        .assert()
+        .code(2)
+        .stderr(predicate::str::contains("BLOCKED"));
+
+    // Custom pattern should also be blocked
+    let input2 = r#"{"tool_name":"Bash","tool_input":{"command":"cat my-custom-secret"}}"#;
+    cmd_with_config(&config)
+        .write_stdin(input2)
+        .assert()
+        .code(2)
+        .stderr(predicate::str::contains("BLOCKED"));
+}
+
+#[test]
+fn test_no_config_blocks_history_command() {
+    // history command should be blocked by hardcoded defaults
+    let dir = TempDir::new().unwrap();
+
+    let input = r#"{"tool_name":"Bash","tool_input":{"command":"history"}}"#;
+
+    cmd_without_config(&dir)
+        .write_stdin(input)
+        .assert()
+        .code(2)
+        .stderr(predicate::str::contains("BLOCKED"));
+}
+
+#[test]
+fn test_no_config_blocks_kube_config() {
+    // .kube/config should be blocked by hardcoded defaults
+    let dir = TempDir::new().unwrap();
+
+    let input = r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.kube/config"}}"#;
+
+    cmd_without_config(&dir)
+        .write_stdin(input)
+        .assert()
+        .code(2)
+        .stderr(predicate::str::contains("BLOCKED"));
+}
+
+#[test]
 fn test_invalid_json_allows() {
     let dir = TempDir::new().unwrap();
     let config = create_config(&dir, r#"sensitive_files = ['\.env\b']"#);

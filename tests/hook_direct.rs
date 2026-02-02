@@ -17,8 +17,11 @@ sensitive_files = [
     'id_ed25519',
     'id_ecdsa',
     '\.git-credentials',
+    '\.kube/config',
     'kubeconfig',
     '\.aws/credentials',
+    '\.config/gcloud/',
+    '\.config/gh/hosts\.yml',
     '_history\b',
     '\.bash_history',
     '\.zsh_history',
@@ -40,6 +43,11 @@ reason = "Exposes shell variables"
 tool = "Bash"
 pattern = '^\s*declare\s+-x'
 reason = "Exposes exported variables"
+
+[[deny]]
+tool = "Bash"
+pattern = '^\s*history\b'
+reason = "Exposes command history"
 "#;
 
 fn cmd_with_config(config_file: &NamedTempFile) -> assert_cmd::Command {
@@ -286,6 +294,59 @@ mod should_block {
             .code(2);
     }
 
+    #[test]
+    fn read_kube_config() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.kube/config"}}"#,
+            )
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn read_envrc() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/project/.envrc"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn read_ecdsa() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.ssh/id_ecdsa"}}"#,
+            )
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn read_gcloud_config() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.config/gcloud/credentials.db"}}"#,
+            )
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn read_gh_hosts() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.config/gh/hosts.yml"}}"#,
+            )
+            .assert()
+            .code(2);
+    }
+
     // Environment exposure
     #[test]
     fn printenv() {
@@ -310,6 +371,24 @@ mod should_block {
         let cfg = create_config();
         cmd_with_config(&cfg)
             .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"declare -x"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn history_command() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"history"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn history_with_count() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"history 50"}}"#)
             .assert()
             .code(2);
     }
