@@ -107,6 +107,8 @@ const DEFAULT_DENY_RULES: &[(&str, &str, &str)] = &[
     ("Bash", r"^\s*export\s*$", "Exposes exported variables"),
     ("Bash", r"/proc/.*/environ", "Exposes process environment"),
     ("Bash", r"\bps\b.*(-E|auxe)", "Exposes process environment"),
+    // History exposure
+    ("Bash", r"^\s*history\b", "Exposes command history"),
     // Container environment
     (
         "Bash",

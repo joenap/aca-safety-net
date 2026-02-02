@@ -63,7 +63,7 @@ The following protections are always active:
 
 - **Sensitive files**: `.env`, `.envrc`, `credentials`, `secrets`, `.netrc`, `.npmrc`, `.pypirc`, `.pem`, `.key`, `id_rsa`, `id_ed25519`, `id_ecdsa`, `.git-credentials`, `.kube/config`, `kubeconfig`, `.aws/credentials`, `.config/gcloud/`, `.config/gh/hosts.yml`, `_history`, `.bash_history`, `.zsh_history`
 - **Read commands**: `cat`, `head`, `tail`, `less`, `more`, `grep`, `rg`, `ag`, `sed`, `awk`, `strings`, `xxd`, `hexdump`, `bat`, `view`
-- **Deny rules**: `printenv`, `set`, `declare -x`, `export`, `/proc/*/environ`, `ps -E`/`ps auxe`, docker/podman env exposure and inspect
+- **Deny rules**: `printenv`, `set`, `declare -x`, `export`, `history`, `/proc/*/environ`, `ps -E`/`ps auxe`, docker/podman env exposure and inspect
 - **Dependency protection**: Enabled for all standard package manifests
 
 ### Optional Config Files
@@ -131,6 +131,7 @@ path = "~/.claude/security-hook.log"
 ### Environment Exposure (Bash)
 
 - `printenv`, `set`, `export`, `declare -x`
+- `history` (exposes command history which may contain secrets)
 - `/proc/*/environ`
 - `ps auxe`, `ps -E`
 - `docker inspect`, `docker exec ... env`
