@@ -192,11 +192,9 @@ Supply chain attacks have become one of the most critical vectors for compromisi
 
 An agent editing `package.json` or `Cargo.toml` directly bypasses your opportunity to review what's being added. ACA Safety Net forces the agent to ask you before editing these files every time, even with "accept edits" enabled.
 
-### Two-Layer Protection
+### Recommended: Soft Policy
 
-This hook uses a **soft policy + hard policy** approach:
-
-**Soft Policy (Agent Instructions)**
+ACA Safety Net provides the **hard policy** (the hook that forces approval). However, we highly recommend also adding a **soft policy** via agent instructions. This is not part of aca-safety-net, but complements it well.
 
 Add to your `~/.claude/CLAUDE.md` or project's `CLAUDE.md`:
 
@@ -219,9 +217,7 @@ This instructs the agent to use CLI commands, which:
 - Validate the package exists in the registry
 - Can be hooked separately for human approval
 
-**Hard Policy (Ask Mode Hook)**
-
-Even with soft policy instructions, agents may still attempt direct edits. The hook intercepts these and returns an "ask" decision to Claude Code, which prompts you for approval before the edit is applied.
+**Why both?** The soft policy reduces friction—the agent learns to use CLI commands and won't trigger the approval prompt unnecessarily. The hard policy (aca-safety-net) is your safety net when the agent ignores instructions or makes mistakes.
 
 ### Why Ask, Not Deny?
 
