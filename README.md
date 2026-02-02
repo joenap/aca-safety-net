@@ -85,7 +85,6 @@ To add custom rules or override settings, create config files that are loaded an
 # Add extra sensitive file patterns (merged with defaults)
 sensitive_files = [
     'my-company-secrets',
-    '\\.internal-config$',
 ]
 
 # Add custom deny rules (merged with defaults)
@@ -94,30 +93,18 @@ tool = "Bash"
 pattern = 'curl.*-d\\s+@'
 reason = "Blocks curl file uploads"
 
-# Git settings
+# Allow force push to specific branches (default: block all)
 [git]
-block_destructive = true
-block_add_sensitive = true
-force_push_allowed_branches = []  # Empty = block all force pushes to protected branches
+force_push_allowed_branches = ["feature/*"]
 
-# rm settings
-[rm]
-block_outside_cwd = true
-allowed_paths = ["/tmp", "/var/tmp"]
-
-# Paranoid mode (optional)
+# Enable paranoid mode (blocks ANY mention of sensitive files)
 [paranoid]
-enabled = false
-extra_patterns = []
+enabled = true
 
-# Audit logging (optional)
+# Enable audit logging
 [audit]
-enabled = false
+enabled = true
 path = "~/.config/aca-safety-net/audit.log"
-
-# Disable dependency protection (not recommended)
-# [dependencies]
-# enabled = false
 ```
 
 ## What Gets Blocked
