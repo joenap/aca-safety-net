@@ -4,7 +4,7 @@
 >
 > **Inherited from original:** Two-level config system (user + project with merging), secrets protection, destructive command detection, shell-aware parsing, custom rules, fail-open design.
 >
-> **New in this fork:** Claude-driven rewrite in Rust (original is Python), TOML config format (original uses JSON), cloud CLI protection (Heroku, AWS, GCloud), audit logging.
+> **New in this fork:** Claude-driven rewrite in Rust (original is Python), TOML config format (original uses JSON), cloud CLI protection (Heroku, AWS, GCloud), dependency file protection, audit logging.
 
 A Rust-based security hook for Claude Code that blocks access to sensitive files, dangerous commands, and environment variable exposure.
 
@@ -16,6 +16,7 @@ A Rust-based security hook for Claude Code that blocks access to sensitive files
 - **Destructive Command Detection**: Blocks `rm -rf` outside working directory, dangerous git operations
 - **Shell-Aware**: Parses command chains (`&&`, `||`, `|`, `;`), strips wrappers (`sudo`, `env`, `bash -c`)
 - **Configurable**: TOML config with user + project-level overrides
+- **Dependency Protection**: Prompts for approval before editing package manifests (supply chain defense)
 - **Paranoid Mode**: Optional strict mode that blocks ANY mention of sensitive files
 
 ## Quick Start
@@ -175,6 +176,99 @@ path = "~/.claude/security-hook.log"
 - `gcloud secrets versions access` (retrieves secret values)
 
 **Allowed**: Non-secret queries like `aws s3 ls`, `gcloud config list`, `heroku apps`
+
+## Dependency File Protection
+
+This hook intercepts Edit/Write operations on package manifests and requires user approval before changes are applied.
+
+### Why This Matters
+
+**1. LLM Training Lag**
+
+LLMs have a knowledge cutoff date, meaning they suggest package versions that were current during training—often months or years behind. When an agent adds `requests==2.28.0` but the current version is `2.31.0`, you miss security patches and bug fixes. Worse, the agent may suggest packages that have been deprecated, renamed, or superseded entirely.
+
+**2. Software Supply Chain Attacks**
+
+Supply chain attacks have become one of the most critical vectors for compromising systems:
+
+- **Typosquatting**: Malicious packages with names similar to popular ones (`reqeusts` vs `requests`)
+- **Dependency confusion**: Attackers publish malicious packages to public registries that shadow private package names
+- **Compromised maintainers**: Legitimate packages taken over by malicious actors
+- **Version injection**: Specific versions containing malware
+
+An agent editing `package.json` or `Cargo.toml` directly bypasses your opportunity to review what's being added.
+
+### Two-Layer Protection
+
+This hook uses a **soft policy + hard policy** approach:
+
+**Soft Policy (Agent Instructions)**
+
+Add to your `~/.claude/CLAUDE.md` or project's `CLAUDE.md`:
+
+```markdown
+## Supply Chain Security
+
+You must NEVER add packages directly by editing dependency files.
+Always use the package manager's CLI:
+
+- cargo: `cargo add <package>`
+- npm/yarn/pnpm: `npm install <package>`, `yarn add`, `pnpm add`
+- uv: `uv add <package>`
+- poetry: `poetry add <package>`
+- bundler: `bundle add <gem>`
+- go: `go get <package>`
+```
+
+This instructs the agent to use CLI commands, which:
+- Resolve the latest compatible version automatically
+- Validate the package exists in the registry
+- Can be hooked separately for human approval
+
+**Hard Policy (Ask Mode Hook)**
+
+Even with soft policy instructions, agents may still attempt direct edits. The hook intercepts these and returns an "ask" decision to Claude Code, which prompts you for approval before the edit is applied.
+
+### Why Ask, Not Deny?
+
+We use "ask" mode instead of blocking outright because agents can still add legitimate value to package manifests:
+
+- Editing `[package]` metadata in `Cargo.toml`
+- Configuring build settings, features, or workspace options
+- Updating `[tool.pytest]` or `[tool.ruff]` sections in `pyproject.toml`
+- Modifying `scripts` in `package.json`
+
+A hard deny would prevent all of these. Ask mode lets you approve configuration changes while catching dependency additions.
+
+### Protected Files
+
+By default, the hook protects:
+
+| File | Ecosystem |
+|------|-----------|
+| `Cargo.toml` | Rust |
+| `pyproject.toml` | Python |
+| `requirements.txt` | Python |
+| `package.json` | Node.js |
+| `Gemfile` | Ruby |
+| `go.mod` | Go |
+| `pom.xml` | Java (Maven) |
+| `build.gradle` / `build.gradle.kts` | Java/Kotlin (Gradle) |
+| `composer.json` | PHP |
+| `Package.swift` | Swift |
+
+### Configuration
+
+```toml
+[dependencies]
+enabled = true  # set to false to disable
+patterns = [
+    '(^|/)Cargo\.toml$',
+    '(^|/)pyproject\.toml$',
+    '(^|/)package\.json$',
+    # ... add custom patterns
+]
+```
 
 ## Paranoid Mode
 
