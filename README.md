@@ -61,7 +61,7 @@ Add to `~/.claude/settings.json`:
 
 The following protections are always active:
 
-- **Sensitive files**: `.env`, `.envrc`, `credentials`, `secrets`, `.netrc`, `.npmrc`, `.pypirc`, `.pem`, `.key`, `id_rsa`, `id_ed25519`, `id_ecdsa`, `.git-credentials`, `kubeconfig`, `.aws/credentials`, `.config/gcloud/`, `.config/gh/hosts.yml`, `_history`, `.bash_history`, `.zsh_history`
+- **Sensitive files**: `.env`, `.envrc`, `credentials`, `secrets`, `.netrc`, `.npmrc`, `.pypirc`, `.pem`, `.key`, `id_rsa`, `id_ed25519`, `id_ecdsa`, `.git-credentials`, `.kube/config`, `kubeconfig`, `.aws/credentials`, `.config/gcloud/`, `.config/gh/hosts.yml`, `_history`, `.bash_history`, `.zsh_history`
 - **Read commands**: `cat`, `head`, `tail`, `less`, `more`, `grep`, `rg`, `ag`, `sed`, `awk`, `strings`, `xxd`, `hexdump`, `bat`, `view`
 - **Deny rules**: `printenv`, `set`, `declare -x`, `export`, `/proc/*/environ`, `ps -E`/`ps auxe`, docker/podman env exposure and inspect
 - **Dependency protection**: Enabled for all standard package manifests

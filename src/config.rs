@@ -81,6 +81,7 @@ const DEFAULT_SENSITIVE_FILES: &[&str] = &[
     r"id_ecdsa",
     r"\.git-credentials",
     // Cloud configs
+    r"\.kube/config",
     r"kubeconfig",
     r"\.aws/credentials",
     r"\.config/gcloud/",
