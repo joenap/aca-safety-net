@@ -173,7 +173,7 @@ path = "~/.config/aca-safety-net/audit.log"
 
 ## Dependency File Protection
 
-This hook intercepts Edit/Write operations on package manifests and requires user approval before changes are applied.
+This hook intercepts Edit/Write operations on package manifests and requires user approval before changes are applied. Because hooks operate at a lower layer than the UI, this protection works even when "accept edits" is enabled in Claude Code.
 
 ### Why This Matters
 
