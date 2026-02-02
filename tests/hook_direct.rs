@@ -80,7 +80,9 @@ mod should_allow {
     fn read_normal_file() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/src/main.rs"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/src/main.rs"}}"#,
+            )
             .assert()
             .code(0);
     }
@@ -89,7 +91,9 @@ mod should_allow {
     fn read_cargo_toml() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/Cargo.toml"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/Cargo.toml"}}"#,
+            )
             .assert()
             .code(0);
     }
@@ -115,10 +119,7 @@ mod should_allow {
     #[test]
     fn empty_input() {
         let cfg = create_config();
-        cmd_with_config(&cfg)
-            .write_stdin("")
-            .assert()
-            .code(0);
+        cmd_with_config(&cfg).write_stdin("").assert().code(0);
     }
 }
 
@@ -184,7 +185,9 @@ mod should_block {
     fn cat_aws_credentials() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"cat ~/.aws/credentials"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Bash","tool_input":{"command":"cat ~/.aws/credentials"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -203,7 +206,9 @@ mod should_block {
     fn read_env_local() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.env.local"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.env.local"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -212,7 +217,9 @@ mod should_block {
     fn read_ssh_key() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.ssh/id_rsa"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.ssh/id_rsa"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -221,7 +228,9 @@ mod should_block {
     fn read_ed25519() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.ssh/id_ed25519"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.ssh/id_ed25519"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -230,7 +239,9 @@ mod should_block {
     fn read_pem() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/certs/server.pem"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/certs/server.pem"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -239,7 +250,9 @@ mod should_block {
     fn read_aws_credentials() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.aws/credentials"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.aws/credentials"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -266,7 +279,9 @@ mod should_block {
     fn read_bash_history() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.bash_history"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.bash_history"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -304,7 +319,9 @@ mod should_block {
     fn git_reset_hard() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"git reset --hard HEAD~1"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Bash","tool_input":{"command":"git reset --hard HEAD~1"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -313,7 +330,9 @@ mod should_block {
     fn git_push_force_main() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"git push --force origin main"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Bash","tool_input":{"command":"git push --force origin main"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -322,7 +341,9 @@ mod should_block {
     fn git_push_force_master() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"git push -f origin master"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Bash","tool_input":{"command":"git push -f origin master"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -331,7 +352,9 @@ mod should_block {
     fn git_checkout_discard() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"git checkout -- src/main.rs"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Bash","tool_input":{"command":"git checkout -- src/main.rs"}}"#,
+            )
             .assert()
             .code(2);
     }
@@ -396,7 +419,9 @@ mod should_block {
     fn find_delete() {
         let cfg = create_config();
         cmd_with_config(&cfg)
-            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"find . -name '*.tmp' -delete"}}"#)
+            .write_stdin(
+                r#"{"tool_name":"Bash","tool_input":{"command":"find . -name '*.tmp' -delete"}}"#,
+            )
             .assert()
             .code(2);
     }

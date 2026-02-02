@@ -5,11 +5,7 @@ use crate::decision::Decision;
 use regex::Regex;
 
 /// Check custom rules against a command or path.
-pub fn check_custom_rules(
-    tool: &str,
-    content: &str,
-    config: &CompiledConfig,
-) -> Decision {
+pub fn check_custom_rules(tool: &str, content: &str, config: &CompiledConfig) -> Decision {
     for rule in &config.raw.rules {
         if rule.tool != tool {
             continue;

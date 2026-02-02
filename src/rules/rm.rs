@@ -62,7 +62,9 @@ fn check_rm_path(path: &str, config: &CompiledConfig, cwd: Option<&str>) -> Opti
     let path_obj = Path::new(path);
 
     // Check for obviously dangerous paths
-    let dangerous_paths = ["/", "/home", "/etc", "/usr", "/var", "/root", "/boot", "/sys", "/proc"];
+    let dangerous_paths = [
+        "/", "/home", "/etc", "/usr", "/var", "/root", "/boot", "/sys", "/proc",
+    ];
 
     // Get canonical-ish path (without actually resolving symlinks)
     let normalized = if path_obj.is_absolute() {
@@ -75,7 +77,10 @@ fn check_rm_path(path: &str, config: &CompiledConfig, cwd: Option<&str>) -> Opti
 
     // Block rm -rf on root or system directories
     for dangerous in &dangerous_paths {
-        if normalized == *dangerous || normalized.starts_with(&format!("{}/", dangerous)) && normalized.len() <= dangerous.len() + 2 {
+        if normalized == *dangerous
+            || normalized.starts_with(&format!("{}/", dangerous))
+                && normalized.len() <= dangerous.len() + 2
+        {
             return Some(Decision::block(
                 "rm.dangerous_path",
                 format!("rm -rf on system path '{}' is blocked", path),
@@ -92,15 +97,14 @@ fn check_rm_path(path: &str, config: &CompiledConfig, cwd: Option<&str>) -> Opti
     }
 
     // Check if path is outside cwd (if cwd is known)
-    if config.raw.rm.block_outside_cwd {
-        if let Some(cwd) = cwd {
-            if !is_path_within(path, cwd, &config.raw.rm.allowed_paths) {
-                return Some(Decision::block(
-                    "rm.outside_cwd",
-                    format!("rm -rf outside working directory: '{}'", path),
-                ));
-            }
-        }
+    if config.raw.rm.block_outside_cwd
+        && let Some(cwd) = cwd
+        && !is_path_within(path, cwd, &config.raw.rm.allowed_paths)
+    {
+        return Some(Decision::block(
+            "rm.outside_cwd",
+            format!("rm -rf outside working directory: '{}'", path),
+        ));
     }
 
     None

@@ -36,7 +36,7 @@ pub fn analyze_aws(tokens: &[Token], _config: &CompiledConfig) -> Decision {
         "ssm" => match command {
             "get-parameter" | "get-parameters" | "get-parameters-by-path" => {
                 // Only block if --with-decryption is present
-                if words.iter().any(|w| *w == "--with-decryption") {
+                if words.contains(&"--with-decryption") {
                     Decision::block(
                         "aws.ssm.decrypt",
                         "aws ssm get-parameter with --with-decryption exposes decrypted secrets",
@@ -50,10 +50,9 @@ pub fn analyze_aws(tokens: &[Token], _config: &CompiledConfig) -> Decision {
 
         // KMS - decryption exposes plaintext
         "kms" => match command {
-            "decrypt" => Decision::block(
-                "aws.kms.decrypt",
-                "aws kms decrypt exposes decrypted data",
-            ),
+            "decrypt" => {
+                Decision::block("aws.kms.decrypt", "aws kms decrypt exposes decrypted data")
+            }
             _ => Decision::allow(),
         },
 

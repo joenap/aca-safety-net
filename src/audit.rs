@@ -39,12 +39,18 @@ impl AuditEntry {
     pub fn new(input: &HookInput, decision: &Decision) -> Self {
         let (blocked, asked, rule, reason) = match decision {
             Decision::Allow => (false, false, None, None),
-            Decision::Block(info) => {
-                (true, false, Some(info.rule.clone()), Some(info.reason.clone()))
-            }
-            Decision::Ask(info) => {
-                (false, true, Some(info.rule.clone()), Some(info.reason.clone()))
-            }
+            Decision::Block(info) => (
+                true,
+                false,
+                Some(info.rule.clone()),
+                Some(info.reason.clone()),
+            ),
+            Decision::Ask(info) => (
+                false,
+                true,
+                Some(info.rule.clone()),
+                Some(info.reason.clone()),
+            ),
         };
 
         let summary = input
@@ -82,10 +88,7 @@ pub struct AuditLogger {
 impl AuditLogger {
     /// Open or create an audit log file.
     pub fn open(path: &Path) -> std::io::Result<Self> {
-        let file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)?;
+        let file = OpenOptions::new().create(true).append(true).open(path)?;
         Ok(Self { file })
     }
 
@@ -110,8 +113,8 @@ mod tests {
 
     #[test]
     fn test_audit_entry_allow() {
-        let input = HookInput::parse(r#"{"tool_name":"Bash","tool_input":{"command":"ls -la"}}"#)
-            .unwrap();
+        let input =
+            HookInput::parse(r#"{"tool_name":"Bash","tool_input":{"command":"ls -la"}}"#).unwrap();
         let decision = Decision::allow();
         let entry = AuditEntry::new(&input, &decision);
 
@@ -123,8 +126,8 @@ mod tests {
 
     #[test]
     fn test_audit_entry_block() {
-        let input = HookInput::parse(r#"{"tool_name":"Read","tool_input":{"file_path":".env"}}"#)
-            .unwrap();
+        let input =
+            HookInput::parse(r#"{"tool_name":"Read","tool_input":{"file_path":".env"}}"#).unwrap();
         let decision = Decision::block("test.rule", "test reason");
         let entry = AuditEntry::new(&input, &decision);
 
@@ -140,8 +143,8 @@ mod tests {
         let temp_file = NamedTempFile::new().unwrap();
         let mut logger = AuditLogger::open(temp_file.path()).unwrap();
 
-        let input = HookInput::parse(r#"{"tool_name":"Bash","tool_input":{"command":"pwd"}}"#)
-            .unwrap();
+        let input =
+            HookInput::parse(r#"{"tool_name":"Bash","tool_input":{"command":"pwd"}}"#).unwrap();
         let decision = Decision::allow();
 
         logger.log_decision(&input, &decision).unwrap();

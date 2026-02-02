@@ -38,10 +38,11 @@ pub fn analyze_parallel(tokens: &[Token], _config: &CompiledConfig) -> Decision 
         }
 
         // Check combined options
-        if word.starts_with('-') && !word.starts_with("--") {
-            if word.contains('r') || word.contains('R') {
-                has_recursive = true;
-            }
+        if word.starts_with('-')
+            && !word.starts_with("--")
+            && (word.contains('r') || word.contains('R'))
+        {
+            has_recursive = true;
         }
     }
 

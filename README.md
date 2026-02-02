@@ -10,12 +10,13 @@ A Rust-based security hook for Claude Code that blocks access to sensitive files
 
 ## Features
 
+- **Zero Config**: Works out of the box with pretty good defaults—no configuration required
 - **Fast**: <5ms execution (vs 50-100ms for Python alternatives)
 - **Secrets Protection**: Blocks read access to `.env`, credentials, SSH keys, API tokens
 - **Cloud CLI Protection**: Blocks secret-exposing commands from Heroku, AWS, and GCloud CLIs
 - **Destructive Command Detection**: Blocks `rm -rf` outside working directory, dangerous git operations
 - **Shell-Aware**: Parses command chains (`&&`, `||`, `|`, `;`), strips wrappers (`sudo`, `env`, `bash -c`)
-- **Configurable**: TOML config with user + project-level overrides
+- **Configurable**: Optional TOML config to extend defaults with custom rules
 - **Dependency Protection**: Prompts for approval before editing package manifests (supply chain defense)
 - **Paranoid Mode**: Optional strict mode that blocks ANY mention of sensitive files
 
@@ -54,43 +55,42 @@ Add to `~/.claude/settings.json`:
 
 ## Configuration
 
-Configuration files are loaded and merged in order:
+**No configuration required.** The hook includes hardcoded security defaults that protect against common threats out of the box.
+
+### Hardcoded Defaults
+
+The following protections are always active:
+
+- **Sensitive files**: `.env`, `.envrc`, `credentials`, `secrets`, `.netrc`, `.npmrc`, `.pypirc`, `.pem`, `.key`, `id_rsa`, `id_ed25519`, `id_ecdsa`, `.git-credentials`, `kubeconfig`, `.aws/credentials`, `.config/gcloud/`, `.config/gh/hosts.yml`, `_history`, `.bash_history`, `.zsh_history`
+- **Read commands**: `cat`, `head`, `tail`, `less`, `more`, `grep`, `rg`, `ag`, `sed`, `awk`, `strings`, `xxd`, `hexdump`, `bat`, `view`
+- **Deny rules**: `printenv`, `set`, `declare -x`, `export`, `/proc/*/environ`, `ps -E`/`ps auxe`, docker/podman env exposure and inspect
+- **Dependency protection**: Enabled for all standard package manifests
+
+### Optional Config Files
+
+To add custom rules or override settings, create config files that are loaded and merged in order:
 
 1. `~/.claude/security-hook.toml` (user-level, global)
 2. `.security-hook.toml` (project-level, in cwd)
 
-Project config extends and overrides user config.
+**Merge behavior:**
+- Arrays (`sensitive_files`, `deny`, `patterns`) are **extended** (your patterns added to defaults)
+- Scalars (`enabled` flags) can be **overridden**
 
 ### Example Config
 
 ```toml
-# Sensitive file patterns (regex)
+# Add extra sensitive file patterns (merged with defaults)
 sensitive_files = [
-    '\\.env\\b',
-    '\\.envrc\\b',
-    'credentials',
-    'secrets',
-    '\\.pem$',
-    '\\.key$',
-    'id_rsa',
-    'id_ed25519',
-    '\\.aws/credentials',
-    '\\.config/gcloud/',
+    'my-company-secrets',
+    '\\.internal-config$',
 ]
 
-# Commands that read file content
-read_commands = '\\b(cat|head|tail|less|more|grep|rg|sed|awk|strings|xxd)\\b'
-
-# Explicit deny rules
+# Add custom deny rules (merged with defaults)
 [[deny]]
 tool = "Bash"
-pattern = '^\\s*printenv'
-reason = "Exposes environment variables"
-
-[[deny]]
-tool = "Bash"
-pattern = '/proc/.*/environ'
-reason = "Exposes process environment"
+pattern = 'curl.*-d\\s+@'
+reason = "Blocks curl file uploads"
 
 # Git settings
 [git]
@@ -112,6 +112,10 @@ extra_patterns = []
 [audit]
 enabled = false
 path = "~/.claude/security-hook.log"
+
+# Disable dependency protection (not recommended)
+# [dependencies]
+# enabled = false
 ```
 
 ## What Gets Blocked
@@ -307,20 +311,22 @@ action = "allow"
 ## How It Works
 
 1. Claude Code invokes the hook via stdin (JSON with `tool_name`, `tool_input`)
-2. Hook loads config from `~/.claude/security-hook.toml` + `.security-hook.toml`
+2. Hook loads hardcoded defaults, then merges optional config from `~/.claude/security-hook.toml` + `.security-hook.toml`
 3. For Bash: parses command, strips wrappers, checks deny rules + sensitive patterns
 4. For Read: checks file path against sensitive patterns
-5. Exit 0 = allow, Exit 2 = block (message shown to Claude)
+5. For Edit/Write: checks if file matches dependency patterns (returns "ask" for approval)
+6. Exit 0 = allow, Exit 2 = block (message shown to Claude)
 
 ### Fail-Open Design
 
 The hook fails open (allows) on:
 - Stdin read errors
 - JSON parse errors
-- Missing config file
-- Invalid regex patterns
+- Invalid regex patterns in custom config
 
-This prevents the hook from breaking Claude Code if misconfigured.
+**Note:** Missing config files do NOT cause fail-open. Hardcoded defaults always apply, ensuring protection even without any configuration.
+
+This design prevents the hook from breaking Claude Code if misconfigured while maintaining baseline security.
 
 ## Architecture
 

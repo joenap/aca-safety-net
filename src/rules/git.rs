@@ -108,7 +108,13 @@ fn analyze_git_push(args: &[&str], config: &CompiledConfig) -> Decision {
     let protected_branches = ["main", "master", "develop", "release"];
 
     // Check if branch is in allowed list
-    if config.raw.git.force_push_allowed_branches.iter().any(|b| b == target_branch) {
+    if config
+        .raw
+        .git
+        .force_push_allowed_branches
+        .iter()
+        .any(|b| b == target_branch)
+    {
         return Decision::allow();
     }
 
@@ -116,7 +122,10 @@ fn analyze_git_push(args: &[&str], config: &CompiledConfig) -> Decision {
     if protected_branches.contains(&target_branch) {
         return Decision::block(
             "git.push.force",
-            format!("force push to protected branch '{}' is blocked", target_branch),
+            format!(
+                "force push to protected branch '{}' is blocked",
+                target_branch
+            ),
         );
     }
 
@@ -147,8 +156,14 @@ fn analyze_git_stash(args: &[&str], _config: &CompiledConfig) -> Decision {
     }
 
     match args[0] {
-        "drop" => Decision::block("git.stash.drop", "git stash drop permanently deletes stashed changes"),
-        "clear" => Decision::block("git.stash.clear", "git stash clear deletes ALL stashed changes"),
+        "drop" => Decision::block(
+            "git.stash.drop",
+            "git stash drop permanently deletes stashed changes",
+        ),
+        "clear" => Decision::block(
+            "git.stash.clear",
+            "git stash clear deletes ALL stashed changes",
+        ),
         _ => Decision::allow(),
     }
 }

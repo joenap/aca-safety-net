@@ -155,7 +155,8 @@ mod tests {
     #[test]
     fn test_sql_set_password_with_password() {
         let config = test_config();
-        let tokens = tokenize("gcloud sql users set-password root --instance=mydb --password=secret123");
+        let tokens =
+            tokenize("gcloud sql users set-password root --instance=mydb --password=secret123");
         let decision = analyze_gcloud(&tokens, &config);
         assert!(decision.is_blocked());
     }

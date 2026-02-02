@@ -23,7 +23,10 @@ fn cmd_with_config(config_path: &std::path::Path) -> assert_cmd::Command {
 fn cmd_without_config(home: &TempDir) -> assert_cmd::Command {
     let mut cmd = cargo_bin_cmd!("aca-safety-net");
     // Point to non-existent config
-    cmd.env("ACO_SAFETY_NET_CONFIG", home.path().join("nonexistent.toml"));
+    cmd.env(
+        "ACO_SAFETY_NET_CONFIG",
+        home.path().join("nonexistent.toml"),
+    );
     cmd
 }
 
@@ -145,7 +148,8 @@ block_outside_cwd = true
 "#,
     );
 
-    let input = r#"{"tool_name":"Bash","tool_input":{"command":"rm -rf /"},"cwd":"/home/user/project"}"#;
+    let input =
+        r#"{"tool_name":"Bash","tool_input":{"command":"rm -rf /"},"cwd":"/home/user/project"}"#;
 
     cmd_with_config(&config)
         .write_stdin(input)
@@ -194,7 +198,8 @@ fn test_block_xargs_rm() {
     let dir = TempDir::new().unwrap();
     let config = create_config(&dir, r#"sensitive_files = []"#);
 
-    let input = r#"{"tool_name":"Bash","tool_input":{"command":"find . -name '*.log' | xargs rm"}}"#;
+    let input =
+        r#"{"tool_name":"Bash","tool_input":{"command":"find . -name '*.log' | xargs rm"}}"#;
 
     cmd_with_config(&config)
         .write_stdin(input)
@@ -227,11 +232,26 @@ enabled = true
 }
 
 #[test]
-fn test_no_config_allows() {
-    // No config = fail-open
+fn test_no_config_uses_hardcoded_defaults() {
+    // No config file = hardcoded security defaults still apply
     let dir = TempDir::new().unwrap();
 
+    // cat .env should be blocked by hardcoded defaults
     let input = r#"{"tool_name":"Bash","tool_input":{"command":"cat .env"}}"#;
+
+    cmd_without_config(&dir)
+        .write_stdin(input)
+        .assert()
+        .code(2)
+        .stderr(predicate::str::contains("BLOCKED"));
+}
+
+#[test]
+fn test_no_config_allows_safe_commands() {
+    // Safe commands should still be allowed with no config
+    let dir = TempDir::new().unwrap();
+
+    let input = r#"{"tool_name":"Bash","tool_input":{"command":"ls -la"}}"#;
 
     cmd_without_config(&dir)
         .write_stdin(input)
@@ -289,7 +309,8 @@ force_push_allowed_branches = []
     );
 
     // Force push to feature branch is allowed
-    let input = r#"{"tool_name":"Bash","tool_input":{"command":"git push -f origin feature/my-branch"}}"#;
+    let input =
+        r#"{"tool_name":"Bash","tool_input":{"command":"git push -f origin feature/my-branch"}}"#;
 
     cmd_with_config(&config)
         .write_stdin(input)

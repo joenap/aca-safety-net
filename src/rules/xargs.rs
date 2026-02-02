@@ -60,7 +60,9 @@ pub fn analyze_xargs(tokens: &[Token], _config: &CompiledConfig) -> Decision {
                 *w == "-r"
                     || *w == "-R"
                     || *w == "--recursive"
-                    || (w.starts_with('-') && !w.starts_with("--") && (w.contains('r') || w.contains('R')))
+                    || (w.starts_with('-')
+                        && !w.starts_with("--")
+                        && (w.contains('r') || w.contains('R')))
             });
 
             if has_recursive {

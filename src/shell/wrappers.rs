@@ -1,20 +1,10 @@
 //! Strip wrapper commands (sudo, env, bash -c, etc.).
 
-use super::tokenizer::{tokenize, Token};
+use super::tokenizer::{Token, tokenize};
 
 /// Commands that wrap other commands.
 const WRAPPER_COMMANDS: &[&str] = &[
-    "sudo",
-    "doas",
-    "su",
-    "env",
-    "nohup",
-    "nice",
-    "ionice",
-    "timeout",
-    "time",
-    "strace",
-    "ltrace",
+    "sudo", "doas", "su", "env", "nohup", "nice", "ionice", "timeout", "time", "strace", "ltrace",
     "watch",
 ];
 
@@ -73,17 +63,14 @@ fn strip_wrappers_recursive(command: &str, depth: usize) -> String {
 fn handle_shell_c(tokens: &[Token], depth: usize) -> String {
     // Look for -c flag
     let mut found_c = false;
-    for (_i, token) in tokens.iter().enumerate() {
-        match token {
-            Token::Word(w) => {
-                if w == "-c" {
-                    found_c = true;
-                } else if found_c {
-                    // This is the command to execute
-                    return strip_wrappers_recursive(w, depth + 1);
-                }
+    for token in tokens.iter() {
+        if let Token::Word(w) = token {
+            if w == "-c" {
+                found_c = true;
+            } else if found_c {
+                // This is the command to execute
+                return strip_wrappers_recursive(w, depth + 1);
             }
-            _ => {}
         }
     }
 

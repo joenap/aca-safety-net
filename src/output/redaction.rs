@@ -5,31 +5,49 @@ use regex::Regex;
 /// Common secret patterns to redact.
 const SECRET_PATTERNS: &[(&str, &str)] = &[
     // API keys and tokens
-    (r#"(?i)(api[_-]?key|apikey)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#, "$1=<REDACTED>"),
-    (r#"(?i)(secret[_-]?key|secretkey)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#, "$1=<REDACTED>"),
-    (r#"(?i)(access[_-]?token|accesstoken)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#, "$1=<REDACTED>"),
-    (r#"(?i)(auth[_-]?token|authtoken)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#, "$1=<REDACTED>"),
-
+    (
+        r#"(?i)(api[_-]?key|apikey)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#,
+        "$1=<REDACTED>",
+    ),
+    (
+        r#"(?i)(secret[_-]?key|secretkey)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#,
+        "$1=<REDACTED>",
+    ),
+    (
+        r#"(?i)(access[_-]?token|accesstoken)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#,
+        "$1=<REDACTED>",
+    ),
+    (
+        r#"(?i)(auth[_-]?token|authtoken)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{20,})['"]?"#,
+        "$1=<REDACTED>",
+    ),
     // Bearer tokens
     (r"(?i)(bearer\s+)([a-zA-Z0-9_\-\.]{20,})", "$1<REDACTED>"),
-
     // AWS
     (r"AKIA[0-9A-Z]{16}", "<AWS_ACCESS_KEY_REDACTED>"),
-    (r#"(?i)(aws_secret_access_key)\s*[:=]\s*['"]?([a-zA-Z0-9/+=]{40})['"]?"#, "$1=<REDACTED>"),
-
+    (
+        r#"(?i)(aws_secret_access_key)\s*[:=]\s*['"]?([a-zA-Z0-9/+=]{40})['"]?"#,
+        "$1=<REDACTED>",
+    ),
     // GitHub
     (r"ghp_[a-zA-Z0-9]{36}", "<GITHUB_TOKEN_REDACTED>"),
     (r"gho_[a-zA-Z0-9]{36}", "<GITHUB_OAUTH_REDACTED>"),
     (r"github_pat_[a-zA-Z0-9_]{22,}", "<GITHUB_PAT_REDACTED>"),
-
     // Passwords
-    (r#"(?i)(password|passwd|pwd)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?"#, "$1=<REDACTED>"),
-
+    (
+        r#"(?i)(password|passwd|pwd)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?"#,
+        "$1=<REDACTED>",
+    ),
     // Private keys
-    (r"-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----", "-----BEGIN PRIVATE KEY-----<REDACTED>"),
-
+    (
+        r"-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----",
+        "-----BEGIN PRIVATE KEY-----<REDACTED>",
+    ),
     // Generic secrets
-    (r#"(?i)(secret|credential|token)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{16,})['"]?"#, "$1=<REDACTED>"),
+    (
+        r#"(?i)(secret|credential|token)\s*[:=]\s*['"]?([a-zA-Z0-9_\-]{16,})['"]?"#,
+        "$1=<REDACTED>",
+    ),
 ];
 
 /// Redact secrets from text.
@@ -49,10 +67,10 @@ pub fn redact_secrets(text: &str) -> String {
 #[allow(dead_code)]
 pub fn contains_secrets(text: &str) -> bool {
     for (pattern, _) in SECRET_PATTERNS {
-        if let Ok(re) = Regex::new(pattern) {
-            if re.is_match(text) {
-                return true;
-            }
+        if let Ok(re) = Regex::new(pattern)
+            && re.is_match(text)
+        {
+            return true;
         }
     }
     false

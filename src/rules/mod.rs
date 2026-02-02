@@ -19,12 +19,12 @@ pub use git::analyze_git;
 pub use heroku::analyze_heroku;
 pub use parallel::analyze_parallel;
 pub use rm::analyze_rm;
-pub use secrets::{check_sensitive_path, check_git_add_sensitive};
+pub use secrets::{check_git_add_sensitive, check_sensitive_path};
 pub use xargs::analyze_xargs;
 
 use crate::config::CompiledConfig;
 use crate::decision::Decision;
-use crate::shell::{split_commands, strip_wrappers, tokenize, Token};
+use crate::shell::{Token, split_commands, strip_wrappers, tokenize};
 
 /// Analyze a command and return a decision.
 pub fn analyze_command(command: &str, config: &CompiledConfig, cwd: Option<&str>) -> Decision {

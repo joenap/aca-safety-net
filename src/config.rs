@@ -24,7 +24,7 @@ pub enum ConfigError {
 }
 
 /// Main configuration structure.
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(default)]
 pub struct Config {
     /// Regex patterns matching sensitive file paths.
@@ -59,6 +59,95 @@ pub struct Config {
     /// Dependency file protection settings.
     #[serde(default)]
     pub dependencies: DependencyConfig,
+}
+
+/// Default sensitive file patterns.
+/// These patterns match files that commonly contain secrets or credentials.
+const DEFAULT_SENSITIVE_FILES: &[&str] = &[
+    // Environment files
+    r"\.env\b",
+    r"\.envrc\b",
+    // Credentials
+    r"credentials",
+    r"secrets",
+    r"\.netrc\b",
+    r"\.npmrc\b",
+    r"\.pypirc\b",
+    // Keys and certs
+    r"\.pem\b",
+    r"\.key\b",
+    r"id_rsa",
+    r"id_ed25519",
+    r"id_ecdsa",
+    r"\.git-credentials",
+    // Cloud configs
+    r"kubeconfig",
+    r"\.aws/credentials",
+    r"\.config/gcloud/",
+    r"\.config/gh/hosts\.yml",
+    // History files
+    r"_history\b",
+    r"\.bash_history",
+    r"\.zsh_history",
+];
+
+/// Default read commands that can expose file contents.
+const DEFAULT_READ_COMMANDS: &[&str] = &[
+    "cat", "head", "tail", "less", "more", "grep", "rg", "ag", "sed", "awk", "strings", "xxd",
+    "hexdump", "bat", "view",
+];
+
+/// Default deny rules: (tool, pattern, reason)
+const DEFAULT_DENY_RULES: &[(&str, &str, &str)] = &[
+    // Environment exposure
+    ("Bash", r"^\s*printenv", "Exposes environment variables"),
+    ("Bash", r"^\s*set\s*$", "Exposes shell variables"),
+    ("Bash", r"^\s*declare\s+-x", "Exposes exported variables"),
+    ("Bash", r"^\s*export\s*$", "Exposes exported variables"),
+    ("Bash", r"/proc/.*/environ", "Exposes process environment"),
+    ("Bash", r"\bps\b.*(-E|auxe)", "Exposes process environment"),
+    // Container environment
+    (
+        "Bash",
+        r"\b(docker|podman)\s+(exec|run)\b.*\benv\b",
+        "Exposes container environment",
+    ),
+    (
+        "Bash",
+        r"\b(docker|podman)\s+inspect\b",
+        "Exposes container configuration",
+    ),
+    (
+        "Bash",
+        r"\b(docker-compose|docker\s+compose)\s+exec\b.*\benv\b",
+        "Exposes container environment",
+    ),
+];
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            sensitive_files: DEFAULT_SENSITIVE_FILES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+            read_commands: Some(format!(r"\b({})\b", DEFAULT_READ_COMMANDS.join("|"))),
+            deny: DEFAULT_DENY_RULES
+                .iter()
+                .map(|(tool, pattern, reason)| DenyRule {
+                    tool: tool.to_string(),
+                    pattern: pattern.to_string(),
+                    reason: reason.to_string(),
+                })
+                .collect(),
+            rules: vec![],
+            paranoid: ParanoidConfig::default(),
+            git: GitConfig::default(),
+            rm: RmConfig::default(),
+            audit: AuditConfig::default(),
+            dependencies: DependencyConfig::default(),
+        }
+    }
 }
 
 /// Explicit deny rule.
@@ -213,14 +302,14 @@ impl Config {
 
         // Load user config (~/.claude/security-hook.toml)
         if let Some(user_config) = Self::load_user_config()? {
-            config = user_config;
+            config.merge(user_config);
         }
 
         // Load and merge project config (.security-hook.toml in cwd)
-        if let Some(cwd) = cwd {
-            if let Some(project_config) = Self::load_project_config(cwd)? {
-                config.merge(project_config);
-            }
+        if let Some(cwd) = cwd
+            && let Some(project_config) = Self::load_project_config(cwd)?
+        {
+            config.merge(project_config);
         }
 
         Ok(config)
@@ -229,11 +318,11 @@ impl Config {
     /// Load user-level config from ~/.claude/security-hook.toml
     fn load_user_config() -> Result<Option<Self>, ConfigError> {
         let path = Self::user_config_path();
-        if let Some(path) = path {
-            if path.exists() {
-                let content = fs::read_to_string(&path)?;
-                return Ok(Some(toml::from_str(&content)?));
-            }
+        if let Some(path) = path
+            && path.exists()
+        {
+            let content = fs::read_to_string(&path)?;
+            return Ok(Some(toml::from_str(&content)?));
         }
         Ok(None)
     }
@@ -264,7 +353,9 @@ impl Config {
         self.sensitive_files.extend(other.sensitive_files);
         self.deny.extend(other.deny);
         self.rules.extend(other.rules);
-        self.paranoid.extra_patterns.extend(other.paranoid.extra_patterns);
+        self.paranoid
+            .extra_patterns
+            .extend(other.paranoid.extra_patterns);
         self.rm.allowed_paths.extend(other.rm.allowed_paths);
         self.git
             .force_push_allowed_branches
@@ -282,6 +373,18 @@ impl Config {
             if other.audit.path.is_some() {
                 self.audit.path = other.audit.path;
             }
+        }
+
+        // Dependencies: if other config explicitly disables, respect that
+        // This allows users to opt-out of dependency protection
+        if !other.dependencies.enabled {
+            self.dependencies.enabled = false;
+        }
+        self.dependencies
+            .patterns
+            .extend(other.dependencies.patterns);
+        if other.dependencies.suggestion.is_some() {
+            self.dependencies.suggestion = other.dependencies.suggestion;
         }
     }
 
@@ -413,7 +516,13 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = Config::default();
-        assert!(config.sensitive_files.is_empty());
+        // Default should include hardcoded security patterns
+        assert!(!config.sensitive_files.is_empty());
+        assert!(config.sensitive_files.iter().any(|p| p.contains(".env")));
+        assert!(config.sensitive_files.iter().any(|p| p.contains("id_rsa")));
+        assert!(config.read_commands.is_some());
+        assert!(!config.deny.is_empty());
+        assert!(config.deny.iter().any(|r| r.pattern.contains("printenv")));
         assert!(!config.paranoid.enabled);
     }
 

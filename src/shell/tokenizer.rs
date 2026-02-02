@@ -68,24 +68,26 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 current.clear();
             }
             let mut redir = String::from(c);
-            if c == '>' && chars.peek() == Some(&'>') {
-                if let Some(ch) = chars.next() {
-                    redir.push(ch);
-                }
+            if c == '>'
+                && chars.peek() == Some(&'>')
+                && let Some(ch) = chars.next()
+            {
+                redir.push(ch);
             }
-            if c == '>' && chars.peek() == Some(&'&') {
-                if let Some(ch) = chars.next() {
-                    redir.push(ch);
-                }
+            if c == '>'
+                && chars.peek() == Some(&'&')
+                && let Some(ch) = chars.next()
+            {
+                redir.push(ch);
             }
             if c == '<' && chars.peek() == Some(&'<') {
                 if let Some(ch) = chars.next() {
                     redir.push(ch);
                 }
-                if chars.peek() == Some(&'<') {
-                    if let Some(ch) = chars.next() {
-                        redir.push(ch);
-                    }
+                if chars.peek() == Some(&'<')
+                    && let Some(ch) = chars.next()
+                {
+                    redir.push(ch);
                 }
             }
             tokens.push(Token::Redirect(redir));
@@ -104,14 +106,14 @@ pub fn tokenize(input: &str) -> Vec<Token> {
 
 fn classify_token(s: &str) -> Token {
     // Check for assignment (VAR=value, not starting with =)
-    if let Some(eq_pos) = s.find('=') {
-        if eq_pos > 0 {
-            let var = &s[..eq_pos];
-            // Variable names must be valid identifiers
-            if is_valid_var_name(var) {
-                let value = &s[eq_pos + 1..];
-                return Token::Assignment(var.to_string(), value.to_string());
-            }
+    if let Some(eq_pos) = s.find('=')
+        && eq_pos > 0
+    {
+        let var = &s[..eq_pos];
+        // Variable names must be valid identifiers
+        if is_valid_var_name(var) {
+            let value = &s[eq_pos + 1..];
+            return Token::Assignment(var.to_string(), value.to_string());
         }
     }
     Token::Word(s.to_string())
@@ -213,7 +215,11 @@ mod tests {
     #[test]
     fn test_append_redirect() {
         let tokens = tokenize("echo hello >> file");
-        assert!(tokens.iter().any(|t| *t == Token::Redirect(">>".to_string())));
+        assert!(
+            tokens
+                .iter()
+                .any(|t| *t == Token::Redirect(">>".to_string()))
+        );
     }
 
     #[test]

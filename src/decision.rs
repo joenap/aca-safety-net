@@ -132,9 +132,7 @@ mod tests {
 
     #[test]
     fn test_block_with_details() {
-        let d = Decision::Block(
-            BlockInfo::new("rule", "reason").with_details("matched: .env"),
-        );
+        let d = Decision::Block(BlockInfo::new("rule", "reason").with_details("matched: .env"));
         assert!(d.block_info().unwrap().details.is_some());
     }
 }

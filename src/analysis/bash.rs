@@ -4,7 +4,7 @@ use crate::config::CompiledConfig;
 use crate::decision::Decision;
 use crate::input::BashInput;
 use crate::rules::{analyze_command, check_custom_rules, check_sensitive_path};
-use crate::shell::{split_commands, strip_wrappers, tokenize, Token};
+use crate::shell::{Token, split_commands, strip_wrappers, tokenize};
 
 /// Analyze a Bash tool invocation.
 pub fn analyze_bash(input: &BashInput, config: &CompiledConfig, cwd: Option<&str>) -> Decision {
@@ -45,20 +45,20 @@ pub fn analyze_bash(input: &BashInput, config: &CompiledConfig, cwd: Option<&str
         });
 
         // Only check sensitive files if this segment starts with a read command
-        if let Some(cmd) = cmd_name {
-            if config.is_read_command(cmd) {
-                // Check all words that look like paths
-                for token in &tokens {
-                    if let Token::Word(word) = token {
-                        // Skip if it looks like an option
-                        if word.starts_with('-') {
-                            continue;
-                        }
-                        // Check if it matches sensitive pattern
-                        let decision = check_sensitive_path(word, config);
-                        if decision.is_blocked() {
-                            return decision;
-                        }
+        if let Some(cmd) = cmd_name
+            && config.is_read_command(cmd)
+        {
+            // Check all words that look like paths
+            for token in &tokens {
+                if let Token::Word(word) = token {
+                    // Skip if it looks like an option
+                    if word.starts_with('-') {
+                        continue;
+                    }
+                    // Check if it matches sensitive pattern
+                    let decision = check_sensitive_path(word, config);
+                    if decision.is_blocked() {
+                        return decision;
                     }
                 }
             }

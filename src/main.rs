@@ -75,12 +75,11 @@ fn main() -> ExitCode {
     };
 
     // Audit logging (if enabled)
-    if compiled.raw.audit.enabled {
-        if let Some(path) = &compiled.raw.audit.path {
-            if let Ok(mut logger) = AuditLogger::open(Path::new(path)) {
-                let _ = logger.log_decision(&hook_input, &decision);
-            }
-        }
+    if compiled.raw.audit.enabled
+        && let Some(path) = &compiled.raw.audit.path
+        && let Ok(mut logger) = AuditLogger::open(Path::new(path))
+    {
+        let _ = logger.log_decision(&hook_input, &decision);
     }
 
     // Output result
