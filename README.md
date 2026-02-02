@@ -37,7 +37,7 @@ Add to `~/.claude/settings.json`:
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|Read",
+        "matcher": "Bash|Read|Edit|Write",
         "hooks": [
           {
             "type": "command",
