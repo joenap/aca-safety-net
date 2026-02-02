@@ -212,12 +212,32 @@ Always use the package manager's CLI:
 - go: `go get <package>`
 ```
 
-This instructs the agent to use CLI commands, which:
-- Resolve the latest compatible version automatically
-- Validate the package exists in the registry
-- Can be hooked separately for human approval
+This instructs the agent to use CLI commands instead of editing files directly. To complete the protection, we highly recommend adding these commands to the `ask` section in `~/.claude/settings.json`:
 
-**Why both?** The soft policy reduces friction—the agent learns to use CLI commands and won't trigger the approval prompt unnecessarily. The hard policy (aca-safety-net) is your safety net when the agent ignores instructions or makes mistakes.
+```json
+{
+  "permissions": {
+    "ask": [
+      "Bash(cargo add:*)",
+      "Bash(npm install:*)",
+      "Bash(yarn add:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pip install:*)",
+      "Bash(uv add:*)",
+      "Bash(gem install:*)",
+      "Bash(bundle add:*)",
+      "Bash(go get:*)",
+      "Bash(brew install:*)",
+      "Bash(brew tap:*)",
+      "Bash(mise install:*)"
+    ]
+  }
+}
+```
+
+This defers package installation approval back to you, letting you review exactly what's being installed before it happens.
+
+**Why both?** The soft policy reduces friction—the agent learns to use CLI commands and won't trigger the aca-safety-net approval prompt unnecessarily. The hard policy (aca-safety-net) is your safety net when the agent ignores instructions or makes mistakes.
 
 ### Why Ask, Not Deny?
 
