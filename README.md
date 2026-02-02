@@ -8,6 +8,8 @@
 
 A Rust-based security hook for Claude Code that blocks access to sensitive files, dangerous commands, and environment variable exposure.
 
+**Expanding support:** We plan to support [opencode](https://github.com/anthropics/opencode) and other autonomous coding tools. Contributions are welcome!
+
 ## Features
 
 - **Zero Config**: Works out of the box with pretty good defaults—no configuration required
