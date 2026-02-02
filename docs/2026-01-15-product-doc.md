@@ -140,7 +140,7 @@ src/
 ## Configuration
 
 ```toml
-# ~/.claude/security-hook.toml
+# ~/.config/aca-safety-net/config.toml
 
 sensitive_files = [
     '\.env\b',

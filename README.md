@@ -70,7 +70,7 @@ The following protections are always active:
 
 To add custom rules or override settings, create config files that are loaded and merged in order:
 
-1. `~/.claude/security-hook.toml` (user-level, global)
+1. `~/.config/aca-safety-net/config.toml` (user-level, global)
 2. `.security-hook.toml` (project-level, in cwd)
 
 **Merge behavior:**
@@ -312,7 +312,7 @@ action = "allow"
 ## How It Works
 
 1. Claude Code invokes the hook via stdin (JSON with `tool_name`, `tool_input`)
-2. Hook loads hardcoded defaults, then merges optional config from `~/.claude/security-hook.toml` + `.security-hook.toml`
+2. Hook loads hardcoded defaults, then merges optional config from `~/.config/aca-safety-net/config.toml` + `.security-hook.toml`
 3. For Bash: parses command, strips wrappers, checks deny rules + sensitive patterns
 4. For Read: checks file path against sensitive patterns
 5. For Edit/Write: checks if file matches dependency patterns (returns "ask" for approval)

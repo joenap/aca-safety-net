@@ -54,13 +54,13 @@ ci: fmt-check lint test
 install: release test
 	mkdir -p ~/.local/bin
 	cp target/release/aca-safety-net ~/.local/bin/
-	mkdir -p ~/.claude
-	cp config.toml ~/.claude/security-hook.toml
+	mkdir -p ~/.config/aca-safety-net
+	cp config.toml ~/.config/aca-safety-net/config.toml
 	@echo "Installed ~/.local/bin/aca-safety-net"
-	@echo "Installed ~/.claude/security-hook.toml"
+	@echo "Installed ~/.config/aca-safety-net/config.toml"
 
 # Uninstall binary and config
 uninstall:
 	rm -f ~/.local/bin/aca-safety-net
 	@echo "Removed ~/.local/bin/aca-safety-net"
-	@echo "Config at ~/.claude/security-hook.toml was NOT removed (manual cleanup if needed)"
+	@echo "Config at ~/.config/aca-safety-net/config.toml was NOT removed (manual cleanup if needed)"

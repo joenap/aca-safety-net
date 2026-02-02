@@ -1,5 +1,5 @@
-# Claude Code Security Hook Configuration
-# Copy to ~/.claude/security-hook.toml
+# ACA Safety Net Configuration
+# Copy to ~/.config/aca-safety-net/config.toml
 
 # Sensitive file patterns (applied to Bash commands and Read file_path)
 # Note: TOML single-quoted strings are literal - use single backslash for regex

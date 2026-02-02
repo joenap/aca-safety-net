@@ -303,7 +303,7 @@ impl Config {
     pub fn load(cwd: Option<&Path>) -> Result<Self, ConfigError> {
         let mut config = Config::default();
 
-        // Load user config (~/.claude/security-hook.toml)
+        // Load user config (~/.config/aca-safety-net/config.toml)
         if let Some(user_config) = Self::load_user_config()? {
             config.merge(user_config);
         }
@@ -318,7 +318,7 @@ impl Config {
         Ok(config)
     }
 
-    /// Load user-level config from ~/.claude/security-hook.toml
+    /// Load user-level config from ~/.config/aca-safety-net/config.toml
     fn load_user_config() -> Result<Option<Self>, ConfigError> {
         let path = Self::user_config_path();
         if let Some(path) = path
@@ -347,7 +347,7 @@ impl Config {
         if let Ok(path) = std::env::var("ACO_SAFETY_NET_CONFIG") {
             return Some(PathBuf::from(path));
         }
-        dirs::home_dir().map(|h| h.join(".claude/security-hook.toml"))
+        dirs::home_dir().map(|h| h.join(".config/aca-safety-net/config.toml"))
     }
 
     /// Merge another config into this one (other takes precedence for scalars).

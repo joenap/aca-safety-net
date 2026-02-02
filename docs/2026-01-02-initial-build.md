@@ -119,14 +119,14 @@ cargo add --dev tempfile assert_cmd predicates
 
 | File | Scope |
 |------|-------|
-| `~/.claude/security-hook.toml` | User (global) |
+| `~/.config/aca-safety-net/config.toml` | User (global) |
 | `.security-hook.toml` | Project (cwd, merges with user) |
 
 ## Installation (Manual)
 
 1. Build: `cargo build --release`
 2. Install: `cp target/release/aca-safety-net ~/.local/bin/`
-3. Config: `cp config.toml ~/.claude/security-hook.toml`
+3. Config: `cp config.toml ~/.config/aca-safety-net/config.toml`
 4. Edit `~/.claude/settings.json`:
 
 ```json
