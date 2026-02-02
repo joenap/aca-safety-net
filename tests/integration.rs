@@ -399,7 +399,7 @@ fn test_edit_cargo_toml_asks() {
         .write_stdin(input)
         .assert()
         .success()
-        .stdout(predicate::str::contains("\"decision\":\"ask\""))
+        .stdout(predicate::str::contains("\"permissionDecision\":\"ask\""))
         .stdout(predicate::str::contains("cargo add"));
 }
 
@@ -414,7 +414,7 @@ fn test_write_package_json_asks() {
         .write_stdin(input)
         .assert()
         .success()
-        .stdout(predicate::str::contains("\"decision\":\"ask\""));
+        .stdout(predicate::str::contains("\"permissionDecision\":\"ask\""));
 }
 
 #[test]
@@ -464,6 +464,6 @@ fn test_edit_pyproject_toml_asks() {
         .write_stdin(input)
         .assert()
         .success()
-        .stdout(predicate::str::contains("\"decision\":\"ask\""))
+        .stdout(predicate::str::contains("\"permissionDecision\":\"ask\""))
         .stdout(predicate::str::contains("uv add"));
 }

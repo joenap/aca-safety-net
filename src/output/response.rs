@@ -18,10 +18,19 @@ pub struct BlockResponse {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AskResponse {
+    pub hook_specific_output: HookSpecificOutput,
+}
+
+/// The hook-specific output for PreToolUse hooks.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HookSpecificOutput {
+    /// Must be "PreToolUse" for this hook type.
+    pub hook_event_name: &'static str,
     /// Must be "ask" to trigger user approval prompt.
-    pub decision: &'static str,
+    pub permission_decision: &'static str,
     /// Message shown to the user.
-    pub reason: String,
+    pub permission_decision_reason: String,
 }
 
 /// Format a decision as output for stderr.
@@ -48,13 +57,19 @@ fn format_ask_json(info: &AskInfo) -> String {
         reason.push_str(&format!("\n\nSuggestion: {}", suggestion));
     }
     let response = AskResponse {
-        decision: "ask",
-        reason,
+        hook_specific_output: HookSpecificOutput {
+            hook_event_name: "PreToolUse",
+            permission_decision: "ask",
+            permission_decision_reason: reason,
+        },
     };
     // Claude Code expects JSON on stdout for ask decisions
     serde_json::to_string(&response).unwrap_or_else(|_| {
         // Fallback to simple format if JSON serialization fails
-        format!("{{\"decision\":\"ask\",\"reason\":\"{}\"}}", info.reason)
+        format!(
+            r#"{{"hookSpecificOutput":{{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"{}"}}}}"#,
+            info.reason
+        )
     })
 }
 
@@ -115,7 +130,7 @@ mod tests {
     fn test_format_ask() {
         let decision = Decision::ask("deps.cargo_toml", "Editing dependency file");
         let msg = format_response(&decision).unwrap();
-        assert!(msg.contains("\"decision\":\"ask\""));
+        assert!(msg.contains("\"permissionDecision\":\"ask\""));
         assert!(msg.contains("Editing dependency file"));
     }
 
@@ -126,7 +141,21 @@ mod tests {
                 .with_suggestion("Use 'cargo add' instead"),
         );
         let msg = format_response(&decision).unwrap();
-        assert!(msg.contains("\"decision\":\"ask\""));
+        assert!(msg.contains("\"permissionDecision\":\"ask\""));
         assert!(msg.contains("cargo add"));
+    }
+
+    #[test]
+    fn test_ask_response_structure() {
+        let decision = Decision::ask("deps.cargo_toml", "Test reason");
+        let json = format_response(&decision).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+        // Verify the full Claude Code hook structure
+        assert!(parsed.get("hookSpecificOutput").is_some());
+        let output = &parsed["hookSpecificOutput"];
+        assert_eq!(output["hookEventName"], "PreToolUse");
+        assert_eq!(output["permissionDecision"], "ask");
+        assert_eq!(output["permissionDecisionReason"], "Test reason");
     }
 }
