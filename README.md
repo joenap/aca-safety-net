@@ -6,7 +6,7 @@
 >
 > **New in this fork:** Claude-driven rewrite in Rust (original is Python), TOML config format (original uses JSON), cloud CLI protection (Heroku, AWS, GCloud), dependency file protection, audit logging.
 
-A Rust-based security hook for Claude Code that blocks access to sensitive files, dangerous commands, and environment variable exposure.
+A fast, Rust-based security hook for autonomous coding agents. Blocks access to sensitive files, dangerous commands, and environment variable exposure.
 
 **Expanding support:** We plan to support [opencode](https://github.com/anthropics/opencode) and other autonomous coding tools. Contributions are welcome!
 
