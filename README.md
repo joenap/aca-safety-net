@@ -8,7 +8,7 @@
 
 A fast, Rust-based security hook for autonomous coding agents. Blocks access to sensitive files, dangerous commands, and environment variable exposure.
 
-**Expanding support:** We plan to support [opencode](https://github.com/anthropics/opencode) and other autonomous coding tools. Contributions are welcome!
+**Currently supports Claude Code.** We plan to add support for [opencode](https://github.com/sst/opencode) and other autonomous coding tools. Contributions welcome!
 
 ## Features
 
