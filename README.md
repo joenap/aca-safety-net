@@ -190,7 +190,7 @@ Supply chain attacks have become one of the most critical vectors for compromisi
 - **Compromised maintainers**: Legitimate packages taken over by malicious actors
 - **Version injection**: Specific versions containing malware
 
-An agent editing `package.json` or `Cargo.toml` directly bypasses your opportunity to review what's being added.
+An agent editing `package.json` or `Cargo.toml` directly bypasses your opportunity to review what's being added. ACA Safety Net forces the agent to ask you before editing these files every time, even with "accept edits" enabled.
 
 ### Two-Layer Protection
 
