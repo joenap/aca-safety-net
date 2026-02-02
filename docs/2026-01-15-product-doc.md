@@ -155,7 +155,7 @@ reason = "Blocks file upload via curl"
 
 [audit]
 enabled = true
-path = "~/.claude/security-hook.log"
+path = "~/.config/aca-safety-net/audit.log"
 ```
 
 ---

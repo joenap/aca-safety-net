@@ -28,7 +28,7 @@ A fast, Rust-based security hook for autonomous coding agents. Blocks access to 
 
 ```bash
 just install
-# Installs binary to ~/.local/bin/ and config to ~/.claude/
+# Installs binary to ~/.local/bin/ and config to ~/.config/aca-safety-net/
 # Ensure ~/.local/bin is in your PATH
 ```
 
@@ -113,7 +113,7 @@ extra_patterns = []
 # Audit logging (optional)
 [audit]
 enabled = false
-path = "~/.claude/security-hook.log"
+path = "~/.config/aca-safety-net/audit.log"
 
 # Disable dependency protection (not recommended)
 # [dependencies]
