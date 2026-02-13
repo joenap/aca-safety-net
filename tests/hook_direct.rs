@@ -27,6 +27,13 @@ sensitive_files = [
     '\.zsh_history',
 ]
 
+allowed_files = [
+    '\.env\.example',
+    '\.env\.sample',
+    '\.env\.template',
+    '\.env\.dist',
+]
+
 read_commands = '\b(cat|head|tail|less|more|grep|rg|ag|sed|awk|strings|xxd|hexdump|bat|view)\b'
 
 [[deny]]
@@ -102,6 +109,62 @@ mod should_allow {
             .write_stdin(
                 r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/Cargo.toml"}}"#,
             )
+            .assert()
+            .code(0);
+    }
+
+    #[test]
+    fn read_env_example() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(
+                r#"{"tool_name":"Read","tool_input":{"file_path":"/home/user/.env.example"}}"#,
+            )
+            .assert()
+            .code(0);
+    }
+
+    #[test]
+    fn cat_env_example() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"cat .env.example"}}"#)
+            .assert()
+            .code(0);
+    }
+
+    #[test]
+    fn cat_env_sample() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"cat .env.sample"}}"#)
+            .assert()
+            .code(0);
+    }
+
+    #[test]
+    fn cat_env_template() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"cat .env.template"}}"#)
+            .assert()
+            .code(0);
+    }
+
+    #[test]
+    fn cat_env_dist() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"cat .env.dist"}}"#)
+            .assert()
+            .code(0);
+    }
+
+    #[test]
+    fn git_add_env_example() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"git add .env.example"}}"#)
             .assert()
             .code(0);
     }
@@ -577,5 +640,31 @@ mod should_block {
             .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"echo test | cat .env"}}"#)
             .assert()
             .code(2);
+    }
+
+    // Verify .env.local is still blocked (not in allowlist)
+    #[test]
+    fn cat_env_local_still_blocked() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"cat .env.local"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    // Verify the block message for .env includes the tip about allowed variants
+    #[test]
+    fn env_block_includes_tip() {
+        let cfg = create_config();
+        let output = cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"cat .env"}}"#)
+            .output()
+            .unwrap();
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("env.example"),
+            "Block message should mention .env.example as allowed alternative, got: {}",
+            stderr
+        );
     }
 }

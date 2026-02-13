@@ -26,6 +26,16 @@ sensitive_files = [
     '\.zsh_history',
 ]
 
+# Allowed file patterns (exempt from sensitive_files blocking)
+# These are well-known placeholder/template files that don't contain real secrets.
+# Add your own patterns here to extend the built-in defaults.
+allowed_files = [
+    '\.env\.example',
+    '\.env\.sample',
+    '\.env\.template',
+    '\.env\.dist',
+]
+
 # Commands that read file content (only block these + sensitive_files combo)
 read_commands = '\b(cat|head|tail|less|more|grep|rg|ag|sed|awk|strings|xxd|hexdump|bat|view)\b'
 

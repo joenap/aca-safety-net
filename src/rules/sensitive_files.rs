@@ -1,15 +1,22 @@
 //! Sensitive file and secrets detection.
 
 use crate::config::CompiledConfig;
-use crate::decision::Decision;
+use crate::decision::{BlockInfo, Decision};
+
+const ENV_TIP: &str =
+    "Tip: .env.example, .env.sample, .env.template, and .env.dist are allowed by default";
 
 /// Check if a file path matches sensitive patterns.
 pub fn check_sensitive_path(path: &str, config: &CompiledConfig) -> Decision {
     if let Some(pattern) = config.is_sensitive_path(path) {
-        return Decision::block(
+        let mut block = BlockInfo::new(
             "secrets.sensitive_file",
             format!("access to sensitive file matching '{}'", pattern),
         );
+        if pattern.contains(r"\.env") {
+            block = block.with_details(ENV_TIP);
+        }
+        return Decision::Block(block);
     }
     Decision::allow()
 }
@@ -22,10 +29,14 @@ pub fn check_git_add_sensitive(paths: &[&str], config: &CompiledConfig) -> Decis
 
     for path in paths {
         if let Some(pattern) = config.is_sensitive_path(path) {
-            return Decision::block(
+            let mut block = BlockInfo::new(
                 "git.add.sensitive",
                 format!("git add on sensitive file matching '{}'", pattern),
             );
+            if pattern.contains(r"\.env") {
+                block = block.with_details(ENV_TIP);
+            }
+            return Decision::Block(block);
         }
     }
 
@@ -107,6 +118,57 @@ mod tests {
     fn test_git_add_normal() {
         let config = test_config();
         let decision = check_git_add_sensitive(&["src/main.rs", "Cargo.toml"], &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_env_block_has_tip() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env", &config);
+        let info = decision.block_info().unwrap();
+        assert!(info.details.as_ref().unwrap().contains("env.example"));
+    }
+
+    #[test]
+    fn test_pem_block_has_no_env_tip() {
+        let config = test_config();
+        let decision = check_sensitive_path("server.pem", &config);
+        let info = decision.block_info().unwrap();
+        assert!(info.details.is_none());
+    }
+
+    #[test]
+    fn test_env_example_allowed() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env.example", &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_env_sample_allowed() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env.sample", &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_env_template_allowed() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env.template", &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_env_dist_allowed() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env.dist", &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_git_add_env_example_allowed() {
+        let config = test_config();
+        let decision = check_git_add_sensitive(&[".env.example"], &config);
         assert!(!decision.is_blocked());
     }
 }

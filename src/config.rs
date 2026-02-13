@@ -30,6 +30,10 @@ pub struct Config {
     /// Regex patterns matching sensitive file paths.
     pub sensitive_files: Vec<String>,
 
+    /// Regex patterns for files that are allowed even if they match sensitive_files.
+    /// For example, `.env.example` matches `\.env\b` but is safe to read.
+    pub allowed_files: Vec<String>,
+
     /// Regex matching commands that read file content.
     pub read_commands: Option<String>,
 
@@ -92,6 +96,15 @@ const DEFAULT_SENSITIVE_FILES: &[&str] = &[
     r"\.zsh_history",
 ];
 
+/// Default allowed file patterns (exempt from sensitive file blocking).
+/// These are well-known placeholder/template files that don't contain real secrets.
+const DEFAULT_ALLOWED_FILES: &[&str] = &[
+    r"\.env\.example",
+    r"\.env\.sample",
+    r"\.env\.template",
+    r"\.env\.dist",
+];
+
 /// Default read commands that can expose file contents.
 const DEFAULT_READ_COMMANDS: &[&str] = &[
     "cat", "head", "tail", "less", "more", "grep", "rg", "ag", "sed", "awk", "strings", "xxd",
@@ -131,6 +144,10 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             sensitive_files: DEFAULT_SENSITIVE_FILES
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+            allowed_files: DEFAULT_ALLOWED_FILES
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
@@ -288,6 +305,8 @@ pub struct CompiledConfig {
     pub raw: Config,
     /// Compiled sensitive file patterns.
     pub sensitive_patterns: Vec<Regex>,
+    /// Compiled allowed file patterns (exempt from sensitive blocking).
+    pub allowed_patterns: Vec<Regex>,
     /// Compiled read commands pattern.
     pub read_commands_re: Option<Regex>,
     /// Compiled deny rules.
@@ -354,6 +373,7 @@ impl Config {
     fn merge(&mut self, other: Config) {
         // Extend arrays
         self.sensitive_files.extend(other.sensitive_files);
+        self.allowed_files.extend(other.allowed_files);
         self.deny.extend(other.deny);
         self.rules.extend(other.rules);
         self.paranoid
@@ -395,6 +415,17 @@ impl Config {
     pub fn compile(self) -> Result<CompiledConfig, ConfigError> {
         let sensitive_patterns = self
             .sensitive_files
+            .iter()
+            .map(|p| {
+                Regex::new(p).map_err(|e| ConfigError::Regex {
+                    pattern: p.clone(),
+                    source: e,
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let allowed_patterns = self
+            .allowed_files
             .iter()
             .map(|p| {
                 Regex::new(p).map_err(|e| ConfigError::Regex {
@@ -453,6 +484,7 @@ impl Config {
         Ok(CompiledConfig {
             raw: self,
             sensitive_patterns,
+            allowed_patterns,
             read_commands_re,
             deny_patterns,
             paranoid_patterns,
@@ -463,7 +495,13 @@ impl Config {
 
 impl CompiledConfig {
     /// Check if a path matches any sensitive file pattern.
+    /// Returns `None` if the path matches an allowed pattern (e.g., `.env.example`).
     pub fn is_sensitive_path(&self, path: &str) -> Option<&str> {
+        // Check allowlist first — allowed files are exempt from sensitive blocking
+        if self.allowed_patterns.iter().any(|re| re.is_match(path)) {
+            return None;
+        }
+
         for (i, re) in self.sensitive_patterns.iter().enumerate() {
             if re.is_match(path) {
                 return Some(&self.raw.sensitive_files[i]);
@@ -566,5 +604,47 @@ mod tests {
         assert!(compiled.matches_paranoid("cat .env").is_some());
         assert!(compiled.matches_paranoid("echo secret").is_some());
         assert!(compiled.matches_paranoid("ls").is_none());
+    }
+
+    #[test]
+    fn test_default_allowed_files() {
+        let config = Config::default();
+        assert!(!config.allowed_files.is_empty());
+        assert!(config.allowed_files.iter().any(|p| p.contains("example")));
+        assert!(config.allowed_files.iter().any(|p| p.contains("sample")));
+        assert!(config.allowed_files.iter().any(|p| p.contains("template")));
+        assert!(config.allowed_files.iter().any(|p| p.contains("dist")));
+    }
+
+    #[test]
+    fn test_allowed_files_bypass_sensitive() {
+        let config = Config {
+            sensitive_files: vec![r"\.env\b".to_string()],
+            ..Default::default()
+        };
+        let compiled = config.compile().unwrap();
+        // .env itself should still be blocked
+        assert!(compiled.is_sensitive_path(".env").is_some());
+        assert!(compiled.is_sensitive_path(".env.local").is_some());
+        // But allowed variants should pass
+        assert!(compiled.is_sensitive_path(".env.example").is_none());
+        assert!(compiled.is_sensitive_path(".env.sample").is_none());
+        assert!(compiled.is_sensitive_path(".env.template").is_none());
+        assert!(compiled.is_sensitive_path(".env.dist").is_none());
+    }
+
+    #[test]
+    fn test_allowed_files_with_path_prefix() {
+        let config = Config {
+            sensitive_files: vec![r"\.env\b".to_string()],
+            ..Default::default()
+        };
+        let compiled = config.compile().unwrap();
+        assert!(
+            compiled
+                .is_sensitive_path("/project/.env.example")
+                .is_none()
+        );
+        assert!(compiled.is_sensitive_path("src/.env.sample").is_none());
     }
 }

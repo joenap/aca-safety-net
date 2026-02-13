@@ -8,7 +8,7 @@ mod git;
 mod heroku;
 mod parallel;
 mod rm;
-mod secrets;
+mod sensitive_files;
 mod xargs;
 
 pub use aws::analyze_aws;
@@ -19,7 +19,7 @@ pub use git::analyze_git;
 pub use heroku::analyze_heroku;
 pub use parallel::analyze_parallel;
 pub use rm::analyze_rm;
-pub use secrets::{check_git_add_sensitive, check_sensitive_path};
+pub use sensitive_files::{check_git_add_sensitive, check_sensitive_path};
 pub use xargs::analyze_xargs;
 
 use crate::config::CompiledConfig;
