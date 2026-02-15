@@ -99,10 +99,10 @@ const DEFAULT_SENSITIVE_FILES: &[&str] = &[
 /// Default allowed file patterns (exempt from sensitive file blocking).
 /// These are well-known placeholder/template files that don't contain real secrets.
 const DEFAULT_ALLOWED_FILES: &[&str] = &[
-    r"\.env\.example",
-    r"\.env\.sample",
-    r"\.env\.template",
-    r"\.env\.dist",
+    r"\.env(\.[a-zA-Z0-9_-]+)*\.example",
+    r"\.env(\.[a-zA-Z0-9_-]+)*\.sample",
+    r"\.env(\.[a-zA-Z0-9_-]+)*\.template",
+    r"\.env(\.[a-zA-Z0-9_-]+)*\.dist",
 ];
 
 /// Default read commands that can expose file contents.
@@ -646,5 +646,29 @@ mod tests {
                 .is_none()
         );
         assert!(compiled.is_sensitive_path("src/.env.sample").is_none());
+    }
+
+    #[test]
+    fn test_allowed_files_with_extra_segments() {
+        let config = Config {
+            sensitive_files: vec![r"\.env\b".to_string()],
+            ..Default::default()
+        };
+        let compiled = config.compile().unwrap();
+        // .env.test should still be blocked (no safe suffix)
+        assert!(compiled.is_sensitive_path(".env.test").is_some());
+        assert!(compiled.is_sensitive_path(".env.production").is_some());
+        // But safe suffixes with extra segments should pass
+        assert!(compiled.is_sensitive_path(".env.test.example").is_none());
+        assert!(compiled.is_sensitive_path(".env.production.sample").is_none());
+        assert!(compiled.is_sensitive_path(".env.staging.template").is_none());
+        assert!(compiled.is_sensitive_path(".env.local.dist").is_none());
+        // Multiple extra segments
+        assert!(compiled.is_sensitive_path(".env.test.local.example").is_none());
+        // With path prefix
+        assert!(compiled.is_sensitive_path("/project/.env.test.example").is_none());
+        // Hyphens and underscores in segments
+        assert!(compiled.is_sensitive_path(".env.staging-v2.example").is_none());
+        assert!(compiled.is_sensitive_path(".env.test_local.sample").is_none());
     }
 }

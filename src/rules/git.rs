@@ -205,7 +205,7 @@ fn analyze_git_add(args: &[&str], config: &CompiledConfig) -> Decision {
             );
             if pattern.contains(r"\.env") {
                 block = block.with_details(
-                    "Tip: .env.example, .env.sample, .env.template, and .env.dist are allowed by default",
+                    "Tip: .env(.*).(example|sample|template|dist) are allowed",
                 );
             }
             return Decision::Block(block);

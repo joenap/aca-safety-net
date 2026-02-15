@@ -111,7 +111,8 @@ path = "~/.config/aca-safety-net/audit.log"
 
 ### Sensitive Files (Read + Bash)
 
-- `.env`, `.envrc`, `.env.local`, `.env.production`
+- `.env`, `.envrc`, `.env.local`, `.env.production`, `.env.test`
+- Safe variants are **allowed**: `.env.example`, `.env.sample`, `.env.template`, `.env.dist` (including with extra segments like `.env.test.example`, `.env.production.sample`)
 - SSH keys: `id_rsa`, `id_ed25519`, `id_ecdsa`
 - Credentials: `.aws/credentials`, `.config/gcloud/`, `.netrc`, `.npmrc`
 - Certificates: `*.pem`, `*.key`

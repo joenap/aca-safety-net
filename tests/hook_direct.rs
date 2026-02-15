@@ -662,8 +662,8 @@ mod should_block {
             .unwrap();
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
-            stderr.contains("env.example"),
-            "Block message should mention .env.example as allowed alternative, got: {}",
+            stderr.contains("example|sample|template|dist"),
+            "Block message should mention allowed .env variants, got: {}",
             stderr
         );
     }

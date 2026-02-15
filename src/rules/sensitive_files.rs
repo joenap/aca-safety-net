@@ -4,7 +4,7 @@ use crate::config::CompiledConfig;
 use crate::decision::{BlockInfo, Decision};
 
 const ENV_TIP: &str =
-    "Tip: .env.example, .env.sample, .env.template, and .env.dist are allowed by default";
+    "Tip: .env(.*).(example|sample|template|dist) are allowed";
 
 /// Check if a file path matches sensitive patterns.
 pub fn check_sensitive_path(path: &str, config: &CompiledConfig) -> Decision {
@@ -126,7 +126,7 @@ mod tests {
         let config = test_config();
         let decision = check_sensitive_path(".env", &config);
         let info = decision.block_info().unwrap();
-        assert!(info.details.as_ref().unwrap().contains("env.example"));
+        assert!(info.details.as_ref().unwrap().contains("example|sample|template|dist"));
     }
 
     #[test]
@@ -170,5 +170,40 @@ mod tests {
         let config = test_config();
         let decision = check_git_add_sensitive(&[".env.example"], &config);
         assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_env_test_example_allowed() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env.test.example", &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_env_production_sample_allowed() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env.production.sample", &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_env_test_still_blocked() {
+        let config = test_config();
+        let decision = check_sensitive_path(".env.test", &config);
+        assert!(decision.is_blocked());
+    }
+
+    #[test]
+    fn test_git_add_env_test_example_allowed() {
+        let config = test_config();
+        let decision = check_git_add_sensitive(&[".env.test.example"], &config);
+        assert!(!decision.is_blocked());
+    }
+
+    #[test]
+    fn test_git_add_env_test_blocked() {
+        let config = test_config();
+        let decision = check_git_add_sensitive(&[".env.test"], &config);
+        assert!(decision.is_blocked());
     }
 }
