@@ -9,6 +9,7 @@ mod heroku;
 mod parallel;
 mod rm;
 mod sensitive_files;
+mod uv;
 mod xargs;
 
 pub use aws::analyze_aws;
@@ -20,6 +21,7 @@ pub use heroku::analyze_heroku;
 pub use parallel::analyze_parallel;
 pub use rm::analyze_rm;
 pub use sensitive_files::{check_git_add_sensitive, check_sensitive_path};
+pub use uv::analyze_uv;
 pub use xargs::analyze_xargs;
 
 use crate::config::CompiledConfig;
@@ -56,6 +58,7 @@ pub fn analyze_command(command: &str, config: &CompiledConfig, cwd: Option<&str>
             "heroku" => analyze_heroku(&tokens, config),
             "aws" => analyze_aws(&tokens, config),
             "gcloud" => analyze_gcloud(&tokens, config),
+            "uv" => analyze_uv(&tokens, config),
             _ => Decision::Allow,
         };
 

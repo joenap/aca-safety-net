@@ -192,6 +192,24 @@ mod should_allow {
         let cfg = create_config();
         cmd_with_config(&cfg).write_stdin("").assert().code(0);
     }
+
+    #[test]
+    fn uv_run_without_with() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"uv run pytest"}}"#)
+            .assert()
+            .code(0);
+    }
+
+    #[test]
+    fn uv_add() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"uv add flask"}}"#)
+            .assert()
+            .code(0);
+    }
 }
 
 mod should_block {
@@ -666,5 +684,77 @@ mod should_block {
             "Block message should mention allowed .env variants, got: {}",
             stderr
         );
+    }
+
+    #[test]
+    fn uv_run_with_package() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"uv run --with browser-cookie3"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn uv_run_with_equals_syntax() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"uv run --with=browser-cookie3 python script.py"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn uv_run_with_requirements() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"uv run --with-requirements reqs.txt python script.py"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn uv_pip_install() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"uv pip install flask"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn uv_pip_install_editable() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"uv pip install -e ."}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn sudo_uv_run_with() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"sudo uv run --with browser-cookie3"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn chained_uv_run_with() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"ls && uv run --with browser-cookie3"}}"#)
+            .assert()
+            .code(2);
+    }
+
+    #[test]
+    fn chained_uv_pip_install() {
+        let cfg = create_config();
+        cmd_with_config(&cfg)
+            .write_stdin(r#"{"tool_name":"Bash","tool_input":{"command":"echo hello && uv pip install flask"}}"#)
+            .assert()
+            .code(2);
     }
 }
