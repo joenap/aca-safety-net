@@ -6,18 +6,21 @@ mod find;
 mod gcloud;
 mod git;
 mod heroku;
+mod kubectl;
 mod parallel;
 mod rm;
 mod sensitive_files;
+pub(crate) mod substitution;
 mod uv;
 mod xargs;
 
 pub use aws::analyze_aws;
 pub use custom::check_custom_rules;
 pub use find::analyze_find;
-pub use gcloud::analyze_gcloud;
+pub use gcloud::{analyze_gcloud, analyze_gcloud_raw};
 pub use git::analyze_git;
 pub use heroku::analyze_heroku;
+pub use kubectl::analyze_kubectl;
 pub use parallel::analyze_parallel;
 pub use rm::analyze_rm;
 pub use sensitive_files::{check_git_add_sensitive, check_sensitive_path};
@@ -30,6 +33,17 @@ use crate::shell::{Token, split_commands, strip_wrappers, tokenize};
 
 /// Analyze a command and return a decision.
 pub fn analyze_command(command: &str, config: &CompiledConfig, cwd: Option<&str>) -> Decision {
+    // These analyzers need the full raw command to detect $(...) substitution bypasses
+    let decision = analyze_kubectl(command);
+    if decision.is_blocked() {
+        return decision;
+    }
+
+    let decision = analyze_gcloud_raw(command);
+    if decision.is_blocked() {
+        return decision;
+    }
+
     // Split command on operators
     let segments = split_commands(command);
 

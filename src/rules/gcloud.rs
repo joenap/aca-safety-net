@@ -1,8 +1,30 @@
 //! GCloud CLI analysis - blocks commands that expose secrets.
 
+use once_cell::sync::Lazy;
+use regex::Regex;
+
 use crate::config::CompiledConfig;
 use crate::decision::Decision;
+use crate::rules::substitution::check_substitution_safety;
 use crate::shell::Token;
+
+/// Matches dangerous gcloud subcommands that output secret values to stdout.
+static GCLOUD_SENSITIVE_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(
+        r"gcloud\s+(secrets\s+versions\s+access|auth\s+(print-access-token|print-identity-token|application-default\s+print-access-token))",
+    )
+    .unwrap()
+});
+
+/// Analyze a raw command string for gcloud secret exposure via `$(...)` substitutions.
+pub fn analyze_gcloud_raw(raw_command: &str) -> Decision {
+    check_substitution_safety(
+        raw_command,
+        &GCLOUD_SENSITIVE_RE,
+        "gcloud.secret",
+        "gcloud command exposes secret values to stdout",
+    )
+}
 
 /// Analyze GCloud CLI commands for secret exposure.
 pub fn analyze_gcloud(tokens: &[Token], _config: &CompiledConfig) -> Decision {
@@ -100,6 +122,56 @@ mod tests {
 
     fn test_config() -> CompiledConfig {
         Config::default().compile().unwrap()
+    }
+
+    // ── analyze_gcloud_raw: substitution bypass tests ────────────────────────
+
+    #[test]
+    fn test_raw_echo_secrets_access() {
+        assert!(analyze_gcloud_raw(
+            "echo $(gcloud secrets versions access latest --secret=my-secret)"
+        )
+        .is_blocked());
+    }
+
+    #[test]
+    fn test_raw_echo_auth_token() {
+        assert!(analyze_gcloud_raw("echo $(gcloud auth print-access-token)").is_blocked());
+    }
+
+    #[test]
+    fn test_raw_variable_assignment() {
+        assert!(
+            analyze_gcloud_raw("TOKEN=$(gcloud auth print-access-token)").is_blocked()
+        );
+    }
+
+    #[test]
+    fn test_raw_eval_auth_token() {
+        assert!(
+            analyze_gcloud_raw(r#"eval "TOKEN=$(gcloud auth print-access-token)""#).is_blocked()
+        );
+    }
+
+    #[test]
+    fn test_raw_herestring() {
+        assert!(
+            analyze_gcloud_raw("cat <<< $(gcloud secrets versions access latest --secret=foo)")
+                .is_blocked()
+        );
+    }
+
+    #[test]
+    fn test_raw_safe_substitution_allowed() {
+        assert!(!analyze_gcloud_raw(
+            "curl -H \"Authorization: Bearer $(gcloud auth print-access-token)\" https://api.example.com"
+        )
+        .is_blocked());
+    }
+
+    #[test]
+    fn test_raw_unrelated_gcloud_allowed() {
+        assert!(!analyze_gcloud_raw("gcloud compute instances list").is_blocked());
     }
 
     // Blocked commands
