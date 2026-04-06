@@ -1,6 +1,7 @@
 //! Built-in and custom rules for command analysis.
 
 mod aws;
+mod azure;
 mod custom;
 mod find;
 mod gcloud;
@@ -15,6 +16,7 @@ mod uv;
 mod xargs;
 
 pub use aws::analyze_aws;
+pub use azure::analyze_azure;
 pub use custom::check_custom_rules;
 pub use find::analyze_find;
 pub use gcloud::{analyze_gcloud, analyze_gcloud_raw};
@@ -71,6 +73,7 @@ pub fn analyze_command(command: &str, config: &CompiledConfig, cwd: Option<&str>
             "parallel" => analyze_parallel(&tokens, config),
             "heroku" => analyze_heroku(&tokens, config),
             "aws" => analyze_aws(&tokens, config),
+            "az" => analyze_azure(&tokens, config),
             "gcloud" => analyze_gcloud(&tokens, config),
             "uv" => analyze_uv(&tokens, config),
             _ => Decision::Allow,
